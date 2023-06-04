@@ -2,27 +2,18 @@
 
 #include "matrixMath.h"
 
-
 //Inputs are three matrixes. a and b matrix will be multiplied and the result will be output to res
-int multMatrix(struct matrix *a, struct matrix *b, struct matrix *res) {
-	if(a == NULL || b == NULL) {
-		return 1;
-	}
+matrixReturnCodes multMatrix(struct matrix *a, struct matrix *b, struct matrix *res) {
+	NULL_CHECK_MATRIX(a);
+	NULL_CHECK_MATRIX(b);
 	
-	if(res == NULL) {
-	    //Give a intilized result matrix
-    	return 2;
-	}
+	NULL_CHECK_MATRIX_RES(res);
 	
-	if(res->row != a->row || res->col != b->col || !a->initilized || !b->initilized || !res->initilized) {
-		//Has to be pre initilized
-		return 3;
-	}
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(b);
+	NON_INIT_CHECK_MATRIX(res);
 	
-	if(a->col !=  b->row) {
-		//This cannot be multiplied together
-		return 4;
-	}
+	DIMENSION_CHECK_MULT_MATRIX(a, b, res);
 	
 	int arow, acol, bcol;
 	for(arow = 0; arow < a->row; ++arow) {
@@ -37,18 +28,17 @@ int multMatrix(struct matrix *a, struct matrix *b, struct matrix *res) {
 			}
 		}
 	}
-	return 0;
+	return MATRIX_SUCCESS;
 }
 
-int scaleMatrix(struct matrix *a, struct matrix *res, matrixType scaler) {
-	if(a == NULL || res == NULL || !res->initilized || !a->initilized) {
-		return 1;
-	}
+matrixReturnCodes scaleMatrix(struct matrix *a, struct matrix *res, matrixType scaler) {
+	NULL_CHECK_MATRIX(a);
+	NULL_CHECK_MATRIX_RES(res);
+
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(res);
 	
-	if(res->row != a->row || res->col != a->col) {
-	    //Checking if dimesions are correct
-    	return 2;
-	}
+	DIMENSION_CHECK_SCALER_MATRIX(a, res);
 	
 	int i, j;
 	for(i = 0; i < a->row; ++i) {
@@ -56,33 +46,21 @@ int scaleMatrix(struct matrix *a, struct matrix *res, matrixType scaler) {
 			res->mat[i][j] = a->mat[i][j] * scaler;
 		}
 	}
-	return 0;
+	return MATRIX_SUCCESS;
 }
 
-int addMatrix(struct matrix *a, struct matrix *b, struct matrix *res) {
-	//Returns 0 when the two matrices are the same.
-	//Returns 1 when the initilization is not correct
-	//Returns 2 when the result matrix is not initilized
-	//Returns 3 when res is not the right shape
-	//Returns 4 when a and b cant be multiplied
-	if(a == NULL || b == NULL) {
-		return 1;
-	}
+matrixReturnCodes addMatrix(struct matrix *a, struct matrix *b, struct matrix *res) {
+	NULL_CHECK_MATRIX(a);
+	NULL_CHECK_MATRIX(b);
 	
-	if(res == NULL) {
-	    //Give a intilized result matrix
-    	return 2;
-	}
+	NULL_CHECK_MATRIX_RES(res);
 	
-	if(res->row != a->row || res->col != b->col || !a->initilized || !b->initilized || !res->initilized) {
-		//Has to be pre initilized
-		return 3;
-	}
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(b);
+	NON_INIT_CHECK_MATRIX(res);
 	
-	if(a->row !=  b->row || a->col !=  b->col) {
-		//This cannot be added together
-		return 4;
-	}
+	DIMENSION_CHECK_ADD_MATRIX(a, b, res);
+
 	int arow, acol;
 	for(arow = 0; arow < a->row; ++arow) {
 		for(acol = 0; acol < a->col; ++acol) {
@@ -90,7 +68,7 @@ int addMatrix(struct matrix *a, struct matrix *b, struct matrix *res) {
 		}
 	}
 	
-	return 0;
+	return MATRIX_SUCCESS;
 }
 
 void printMatrix(struct matrix *a) {
@@ -116,45 +94,78 @@ void printMatrix(struct matrix *a) {
 	printf("\n");
 }
 
-int compareMatrieces(struct matrix *a, struct matrix *b) {
-	//Returns 0 when the two matrices are the same.
-	//Returns 1 when the initilization is not correct
-	//Returns 2 when the sizes don't match
-	//Returns 3 when the values dont match
-	if(a == NULL || !a->initilized || b == NULL || !b->initilized) {
-		return 1;
-	}
+matrixReturnCodes compareMatrieces(struct matrix *a, struct matrix *b) {
+	NULL_CHECK_MATRIX(a);
+	NULL_CHECK_MATRIX(b);
+
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(b);
 	if(a->row != b->row || a->col != a->col) {
-		return 2;
+		return MATRIX_DIMENSION_MISMATCH;
 	}
 	int i, j;
 	for(i = 0; i < a->row; ++i) {
 		for(j = 0; j < a->col; ++j) {
 			if(a->mat[i][j] != b->mat[i][j]) {
-				return 3;
+				return MATRIX_COMPARE_FAILURE;
 			}
 		}
 	}
-	return 0;
+	return MATRIX_SUCCESS;
 }
 
-int tranposeMatrix(struct matrix *a, struct matrix *b) {
-	//Returns 0 on success
-	//Returns 1 when the initilization is not correct
-	//Returns 2 when the sizes don't match
-	if(a == NULL || !a->initilized || b == NULL || !b->initilized) {
-		return 1;
-	}
-	if(a->row != b->col || a->col != a->row) {
-		return 2;
+matrixReturnCodes tranposeMatrix(struct matrix *a, struct matrix *b) {
+	NULL_CHECK_MATRIX(a);
+	NULL_CHECK_MATRIX(b);
+
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(b);
+	if(a->row != b->col || a->col != b->row) {
+		return MATRIX_DIMENSION_MISMATCH;
 	}
 	int i, j;
 	for(i = 0; i < a->row; ++i) {
 		for(j = 0; j < a->col; ++j) {
-			b->mat[j][i] = a->mat[i][j]
+			b->mat[j][i] = a->mat[i][j];
 		}
 	}
-	return 0;
+	return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes subMatrix(struct matrix *a, struct matrix *b, struct matrix *res)
+{
+	NULL_CHECK_MATRIX(a);
+	NULL_CHECK_MATRIX(b);
+	
+	NULL_CHECK_MATRIX_RES(res);
+	
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(b);
+	NON_INIT_CHECK_MATRIX(res);
+	
+	DIMENSION_CHECK_ADD_MATRIX(a, b, res);
+
+	int arow, acol;
+	for(arow = 0; arow < a->row; ++arow) {
+		for(acol = 0; acol < a->col; ++acol) {
+			res->mat[arow][acol] = a->mat[arow][acol] - b->mat[arow][acol];
+		}
+	}
+	
+	return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes inverseMatrix(struct matrix *a, struct matrix *res)
+{
+	NULL_CHECK_MATRIX(a);
+	
+	NULL_CHECK_MATRIX_RES(res);
+	
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(res);
+
+	LOG_ERROR("inverseMatrix not implemented");
+	return MATRIX_ERROR;
 }
 
 //Test for all this shit
