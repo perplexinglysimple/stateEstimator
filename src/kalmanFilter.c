@@ -16,8 +16,3 @@ int kalmanFilterUpdate(struct kalmanMatrixes *k) {
 	return 0;	
 }
 
-int kalmanFilterUpdateEKF(struct kalmanMatrixes *k) {
-	LOG_ERROR("kalmanFilterUpdateEKF not implemented");
-	return 0;
-}
-

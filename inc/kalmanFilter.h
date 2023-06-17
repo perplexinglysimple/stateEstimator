@@ -23,6 +23,4 @@ int kalmanFilterPredict(struct kalmanMatrixes *);
 
 int kalmanFilterUpdate(struct kalmanMatrixes *);
 
-int kalmanFilterUpdateEKF(struct kalmanMatrixes *);
-
 #endif

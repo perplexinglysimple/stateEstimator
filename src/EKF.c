@@ -9,12 +9,101 @@ void calculateJacobian(EKFMatrix *x, EKFMatrix *_x_predicted, EKFMatrix *Jacobia
 // See EKF.h for documentation
 EKFReturnCodes EKFInit(EKFState *ekf, EKFConfigOptions *options)
 {
+  NULL_CHECK_EKF(ekf);
+  NULL_CHECK_EKF(options);
 
+  NULL_CHECK_MATRIX(options->x0);
+  NULL_CHECK_MATRIX(options->P0);
+  NULL_CHECK_MATRIX(options->Q);
+  NULL_CHECK_MATRIX(options->R);
+  NULL_CHECK_MATRIX(options->A);
+
+  // Check to see if x, P, Q, R, and A are the correct size.
+  if (options->x0->row != options->n || options->x0->col != 1)
+  {
+    LOG_ERROR("EKFInit() failed because the x0 matrix is not the correct size.");
+    return EKF_ERROR;
+  }
+  if (options->P0->row != options->n || options->P0->col != options->n)
+  {
+    LOG_ERROR("EKFInit() failed because the P0 matrix is not the correct size.");
+    return EKF_ERROR;
+  }
+  if (options->Q->row != options->n || options->Q->col != options->n)
+  {
+    LOG_ERROR("EKFInit() failed because the Q matrix is not the correct size.");
+    return EKF_ERROR;
+  }
+  if (options->R->row != options->n || options->R->col != options->n)
+  {
+    LOG_ERROR("EKFInit() failed because the R matrix is not the correct size.");
+    return EKF_ERROR;
+  }
+  if (options->A->row != options->n || options->A->col != options->n)
+  {
+    LOG_ERROR("EKFInit() failed because the A matrix is not the correct size.");
+    return EKF_ERROR;
+  }
+  // Check to see if f and h are not null.
+  NULL_CHECK_EKF(options->f);
+  NULL_CHECK_EKF(options->h);
+
+  // Initialize the state vector.
+  MATRIX_MATH_RETURN_CHECK(copyMatrix(options->x0, ekf->x));
+  // Initialize the state covariance matrix.
+  MATRIX_MATH_RETURN_CHECK(copyMatrix(options->P0, ekf->P));
+  // Initialize the process noise covariance matrix.
+  MATRIX_MATH_RETURN_CHECK(copyMatrix(options->Q, ekf->Q));
+  // Initialize the measurement noise covariance matrix.
+  MATRIX_MATH_RETURN_CHECK(copyMatrix(options->R, ekf->R));
+  // Initialize the state transition matrix.
+  MATRIX_MATH_RETURN_CHECK(copyMatrix(options->A, ekf->A));
+  // Initialize the temporary storage matrices.
+  ekf->mallocFlag = options->mallocFlag;
+  if (ekf->mallocFlag)
+  {
+    INIT_MATRIX(ekf->_P, ekf->P->row, ekf->P->col);
+    INIT_MATRIX(ekf->_K, ekf->P->row, ekf->P->col);
+    INIT_MATRIX(ekf->_z, ekf->P->row, ekf->P->col);
+    INIT_MATRIX(ekf->_F, ekf->P->row, ekf->P->col);
+    INIT_MATRIX(ekf->_H, ekf->P->row, ekf->P->col);
+    INIT_MATRIX(ekf->_F_TRANSPOSE, ekf->P->row, ekf->P->col);
+    INIT_MATRIX(ekf->_H_TRANSPOSE, ekf->P->row, ekf->P->col);
+  }
+  else
+  {
+    // Check that the temporary storage matrices are the correct size and not null
+    NULL_CHECK_MATRIX(ekf->_P);
+    NULL_CHECK_MATRIX(ekf->_K);
+    NULL_CHECK_MATRIX(ekf->_z);
+    NULL_CHECK_MATRIX(ekf->_F);
+    NULL_CHECK_MATRIX(ekf->_H);
+  }
+  // Initialize the state transition function.
+  ekf->f = options->f;
+  // Initialize the measurement function.
+  ekf->h = options->h;
+  // Initialize the number of state variables.
+  ekf->numberOfStates = options->n;
+  // Initialize the use finite difference Jacobian flag.
+  ekf->useFiniteDifferenceJacobian = options->useFiniteDifferenceJacobian;
+  return EKF_SUCCESS;
 } // EKFInit()
 
 EKFReturnCodes EKFCleanup(EKFState *ekf)
 {
+  NULL_CHECK_EKF(ekf);
 
+  if (ekf->mallocFlag)
+  {
+    FREE_MATRIX(ekf->_P);
+    FREE_MATRIX(ekf->_K);
+    FREE_MATRIX(ekf->_z);
+    FREE_MATRIX(ekf->_F);
+    FREE_MATRIX(ekf->_H);
+    FREE_MATRIX(ekf->_F_TRANSPOSE);
+    FREE_MATRIX(ekf->_H_TRANSPOSE);
+  }
 } // EKFCleanup()
 
 // See EKF.h for documentation
@@ -41,6 +130,7 @@ EKFReturnCodes EKFPredict(EKFState *ekf)
 EKFReturnCodes EKFUpdate(EKFState *ekf, EKFMeasurement *measurement)
 {
   NULL_CHECK_EKF(ekf);
+  NULL_CHECK_EKF(measurement);
   // Calculate the Jacobian matrix, H, of the measurement function with respect to the state variables, evaluated at x_predicted.
   if (ekf->useFiniteDifferenceJacobian)
   {
@@ -63,7 +153,8 @@ EKFReturnCodes EKFUpdate(EKFState *ekf, EKFMeasurement *measurement)
   MATRIX_MATH_RETURN_CHECK(addMatrix(ekf->x, ekf->_z, ekf->x));
   // Update the state covariance matrix: P = (I - K * H) * P_predicted.
   MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->_K, ekf->_H, ekf->P));
-  
+  MATRIX_MATH_RETURN_CHECK(idenityMatrixMinusA(ekf->P, ekf->P));
+  MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->P, ekf->_P, ekf->P));
 } // EKFUpdate()
 
 // ------------------------- Private Functions ------------------------- //

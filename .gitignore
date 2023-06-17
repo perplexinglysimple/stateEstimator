@@ -54,3 +54,11 @@ dkms.conf
 .vscode/
 lib/
 out/
+
+build/
+
+# If you mess up and do the CMAKE build in the source directory, this will clean it up
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile

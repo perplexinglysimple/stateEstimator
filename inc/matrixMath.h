@@ -10,7 +10,7 @@
 #ifndef MATRIXTYPE
 #define MATRIXTYPE
 typedef int matrixType;
-//This is the type so the print statements wont bug outp
+//This is the type so the print statements wont bug out
 //This can be int or double
 #define _INT
 #endif
@@ -49,6 +49,25 @@ struct matrix {
 			} \
 		} \
 	} while(0)
+
+#define __CONCAT(a, b) __CONCAT_INNER(a, b)
+#define __CONCAT_INNER(a, b) a ## b
+
+#define UNIQUE_NAME(base) __CONCAT(base, __COUNTER__)
+#define UNIQUE_NAME_PER_MACRO(base) __CONCAT(base, __LINE__)
+
+#define STATIC_MATRIX_DIRECTIVE(ptr, _row, _col, name) \
+	static matrixType __CONCAT(name, UNIQUE_NAME_PER_MACRO(m_mat))[_row][_col]; \
+	static struct matrix __CONCAT(name, UNIQUE_NAME_PER_MACRO(m)) = { .mat = NULL, .initilized = 1, .row = _row, .col = _col }; \
+	__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)).mat = (matrixType **)__CONCAT(name, UNIQUE_NAME_PER_MACRO(m_mat)); \
+	int __CONCAT(name, UNIQUE_NAME_PER_MACRO(i)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(j)); \
+	for(__CONCAT(name, UNIQUE_NAME_PER_MACRO(i)) = 0; __CONCAT(name, UNIQUE_NAME_PER_MACRO(i)) < _row; ++__CONCAT(name, UNIQUE_NAME_PER_MACRO(i))) { \
+		for(__CONCAT(name, UNIQUE_NAME_PER_MACRO(j)) = 0; __CONCAT(name, UNIQUE_NAME_PER_MACRO(j)) < _col; ++__CONCAT(name, UNIQUE_NAME_PER_MACRO(j))) { \
+			__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)).mat[__CONCAT(name, UNIQUE_NAME_PER_MACRO(i))][__CONCAT(name, UNIQUE_NAME_PER_MACRO(j))] = 0; \
+		} \
+	} \
+	ptr = &__CONCAT(name, UNIQUE_NAME_PER_MACRO(m));
+	
 		
 #define FREE_MATRIX(ptr) \
 	do { \
@@ -129,6 +148,8 @@ matrixReturnCodes subMatrix(struct matrix *a, struct matrix *b, struct matrix *r
 matrixReturnCodes inverseMatrix(struct matrix *a, struct matrix *res);
 
 matrixReturnCodes tranposeMatrix(struct matrix *a, struct matrix *b);
+
+matrixReturnCodes idenityMatrixMinusA(struct matrix *a, struct matrix *res);
 
 matrixReturnCodes compareMatrieces(struct matrix *a, struct matrix *b);
 

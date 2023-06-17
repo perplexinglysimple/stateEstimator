@@ -1,11 +1,16 @@
 #ifndef EKF_STRUCT_H
 #define EKF_STRUCT_H
 
+#include <stdbool.h>
+
 // CHANGE THIS TO FLOAT OR DOUBLE DEPENDING ON YOUR NEEDS
 typedef double ekfType;
 
+#ifndef MATRIXTYPE
 #define MATRIXTYPE
 typedef ekfType matrixType;
+#endif
+
 #include "matrixMath.h"
 
 // TODO fix matrix struct to not need this extra typedef
@@ -34,6 +39,7 @@ typedef struct EKFState_ {
     EKFMeasurementFunction h; // Measurement function
     int numberOfStates; // Number of state variables
     bool useFiniteDifferenceJacobian; // Use finite difference to calculate the Jacobian. If false, the user must provide the Jacobian through the _F and _H matrices.
+    bool mallocFlag; // Flag to indicate if the matrices were malloced or not
 } EKFState;
 
 typedef struct EKFConfigOptions_ {
@@ -43,11 +49,15 @@ typedef struct EKFConfigOptions_ {
     EKFMatrix* R; // Measurement noise covariance matrix
     EKFMatrix* A; // State transition matrix
     int n; // Number of state variables
+    EKFStateTransitionFunction f; // System dynamics model function
+    EKFMeasurementFunction h; // Measurement function
+    int numberOfStates; // Number of state variables
+    bool useFiniteDifferenceJacobian; // Use finite difference to calculate the Jacobian. If false, the user must provide the Jacobian through the _F and _H matrices.
+    bool mallocFlag; // Flag to indicate if the matrices were malloced or not
 } EKFConfigOptions;
 
 typedef struct EKFMeasurement_ {
     EKFMatrix* z; // Measurement vector
-    EKFMatrix* H; // Measurement matrix
 } EKFMeasurement;
 
 #endif // EKF_STRUCT_H

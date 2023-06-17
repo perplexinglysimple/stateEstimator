@@ -168,6 +168,32 @@ matrixReturnCodes inverseMatrix(struct matrix *a, struct matrix *res)
 	return MATRIX_ERROR;
 }
 
+matrixReturnCodes idenityMatrixMinusA(struct matrix *a, struct matrix *res)
+{
+	return MATRIX_ERROR;
+}
+
+matrixReturnCodes copyMatrix(struct matrix *a, struct matrix *res)
+{
+	NULL_CHECK_MATRIX(a);
+
+	NULL_CHECK_MATRIX_RES(res);
+
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(res);
+
+	if(a->row != res->row || a->col != res->col) {
+		return MATRIX_DIMENSION_MISMATCH;
+	}
+	int i, j;
+	for(i = 0; i < a->row; ++i) {
+		for(j = 0; j < a->col; ++j) {
+			res->mat[i][j] = a->mat[i][j];
+		}
+	}
+	return MATRIX_SUCCESS;
+}
+
 //Test for all this shit
 #ifdef TEST_MULT
 
