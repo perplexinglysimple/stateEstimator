@@ -35,12 +35,21 @@
 #define _LOG_MSG_MACRO_CHOOSER(...) \
     GET_3RD_ARG(__VA_ARGS__, PRINTF_1ARGS, PRINTF_2ARG, )( __VA_ARGS__)
 
+#ifdef __FILENAME__ 
+#define LOG_MSG_PRINTF(msg, level, ...) \
+    do { \
+        printf("[%s:%d] %s: ", __FILENAME__, __LINE__, level); \
+        _VA_OPT_PRINTF_CHECK(msg, __VA_ARGS__); \
+        printf("\n"); \
+    } while (0)
+#else
 #define LOG_MSG_PRINTF(msg, level, ...) \
     do { \
         printf("[%s:%d] %s: ", __FILE__, __LINE__, level); \
         _VA_OPT_PRINTF_CHECK(msg, __VA_ARGS__); \
         printf("\n"); \
     } while (0)
+#endif
 
 
 #define LOG_ERROR(msg, ...) LOG_MSG_PRINTF(msg, "ERROR", __VA_ARGS__)

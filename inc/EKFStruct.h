@@ -3,14 +3,6 @@
 
 #include <stdbool.h>
 
-// CHANGE THIS TO FLOAT OR DOUBLE DEPENDING ON YOUR NEEDS
-typedef double ekfType;
-
-#ifndef MATRIXTYPE
-#define MATRIXTYPE
-typedef ekfType matrixType;
-#endif
-
 #include "matrixMath.h"
 
 // TODO fix matrix struct to not need this extra typedef

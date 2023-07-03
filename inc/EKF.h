@@ -16,7 +16,7 @@
 #include "utils.h"
 
 // Epsilon is used for small perturbations for finite difference Jacobian calculations.
-#define EPSILON ((matrixType) 0.00001)
+#define EPSILON ((matrixType) 0.0001)
 
 typedef enum EKFReturnCodes_ {
     EKF_SUCCESS = 0,
@@ -60,5 +60,24 @@ EKFReturnCodes EKFCleanup(EKFState *ekf);
     STATIC_MATRIX_DIRECTIVE(ekfptr->_H, numstates, numstates, _H); \
     STATIC_MATRIX_DIRECTIVE(ekfptr->_F_TRANSPOSE, numstates, numstates, _F_TRANSPOSE); \
     STATIC_MATRIX_DIRECTIVE(ekfptr->_H_TRANSPOSE, numstates, numstates, _H_TRANSPOSE)
+
+// This is used instead of the STATIC_ALLOC_EKF_DIRECTIVE macro and only allocates the non-_ prefixed matrices.
+#define PRE_INIT_ALLOC(ekfptr, numstates, malloc) \
+    if (malloc) \
+    { \
+        INIT_MATRIX((ekfptr)->x, numstates, 1); \
+        INIT_MATRIX((ekfptr)->P, numstates, numstates); \
+        INIT_MATRIX((ekfptr)->Q, numstates, numstates); \
+        INIT_MATRIX((ekfptr)->R, numstates, numstates); \
+        INIT_MATRIX((ekfptr)->A, numstates, numstates); \
+    } \
+    else \
+    { \
+        STATIC_MATRIX_DIRECTIVE((ekfptr)->x, numstates, 1, x); \
+        STATIC_MATRIX_DIRECTIVE((ekfptr)->P, numstates, numstates, P); \
+        STATIC_MATRIX_DIRECTIVE((ekfptr)->Q, numstates, numstates, Q); \
+        STATIC_MATRIX_DIRECTIVE((ekfptr)->R, numstates, numstates, R); \
+        STATIC_MATRIX_DIRECTIVE((ekfptr)->A, numstates, numstates, A); \
+    }
     
 #endif

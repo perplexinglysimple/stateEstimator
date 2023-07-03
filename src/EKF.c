@@ -1,4 +1,3 @@
-#include "matrixMath.h"
 #include "EKF.h"
 
 // ------------------------- Private Function Prototypes ------------------------- //
@@ -12,11 +11,19 @@ EKFReturnCodes EKFInit(EKFState *ekf, EKFConfigOptions *options)
   NULL_CHECK_EKF(ekf);
   NULL_CHECK_EKF(options);
 
+  // Check to see if the options struct is initialized.
   NULL_CHECK_MATRIX(options->x0);
   NULL_CHECK_MATRIX(options->P0);
   NULL_CHECK_MATRIX(options->Q);
   NULL_CHECK_MATRIX(options->R);
   NULL_CHECK_MATRIX(options->A);
+
+  // Check to see if the ekf struct is initialized.
+  NULL_CHECK_MATRIX(ekf->x);
+  NULL_CHECK_MATRIX(ekf->P);
+  NULL_CHECK_MATRIX(ekf->Q);
+  NULL_CHECK_MATRIX(ekf->R);
+  NULL_CHECK_MATRIX(ekf->A);
 
   // Check to see if x, P, Q, R, and A are the correct size.
   if (options->x0->row != options->n || options->x0->col != 1)
@@ -64,11 +71,12 @@ EKFReturnCodes EKFInit(EKFState *ekf, EKFConfigOptions *options)
   {
     INIT_MATRIX(ekf->_P, ekf->P->row, ekf->P->col);
     INIT_MATRIX(ekf->_K, ekf->P->row, ekf->P->col);
-    INIT_MATRIX(ekf->_z, ekf->P->row, ekf->P->col);
+    INIT_MATRIX(ekf->_z, ekf->x->row, ekf->x->col);
     INIT_MATRIX(ekf->_F, ekf->P->row, ekf->P->col);
     INIT_MATRIX(ekf->_H, ekf->P->row, ekf->P->col);
     INIT_MATRIX(ekf->_F_TRANSPOSE, ekf->P->row, ekf->P->col);
     INIT_MATRIX(ekf->_H_TRANSPOSE, ekf->P->row, ekf->P->col);
+    INIT_MATRIX(ekf->_x_predicted, ekf->x->row, ekf->x->col);
   }
   else
   {
@@ -78,6 +86,9 @@ EKFReturnCodes EKFInit(EKFState *ekf, EKFConfigOptions *options)
     NULL_CHECK_MATRIX(ekf->_z);
     NULL_CHECK_MATRIX(ekf->_F);
     NULL_CHECK_MATRIX(ekf->_H);
+    NULL_CHECK_MATRIX(ekf->_F_TRANSPOSE);
+    NULL_CHECK_MATRIX(ekf->_H_TRANSPOSE);
+    NULL_CHECK_MATRIX(ekf->_x_predicted);
   }
   // Initialize the state transition function.
   ekf->f = options->f;
@@ -103,7 +114,10 @@ EKFReturnCodes EKFCleanup(EKFState *ekf)
     FREE_MATRIX(ekf->_H);
     FREE_MATRIX(ekf->_F_TRANSPOSE);
     FREE_MATRIX(ekf->_H_TRANSPOSE);
+    FREE_MATRIX(ekf->_x_predicted);
   }
+
+  return EKF_SUCCESS;
 } // EKFCleanup()
 
 // See EKF.h for documentation
@@ -120,7 +134,7 @@ EKFReturnCodes EKFPredict(EKFState *ekf)
   }
   // Update the state covariance matrix: P_predicted = _F * P * _F^T + Q.
   MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->_F, ekf->P, ekf->P));
-  MATRIX_MATH_RETURN_CHECK(tranposeMatrix(ekf->_F, ekf->_F_TRANSPOSE));
+  MATRIX_MATH_RETURN_CHECK(transposeMatrix(ekf->_F, ekf->_F_TRANSPOSE));
   MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->P, ekf->_F_TRANSPOSE, ekf->P));
   MATRIX_MATH_RETURN_CHECK(addMatrix(ekf->P, ekf->Q, ekf->P));
   return EKF_SUCCESS;
@@ -137,7 +151,7 @@ EKFReturnCodes EKFUpdate(EKFState *ekf, EKFMeasurement *measurement)
     calculateJacobian(ekf->_x_predicted, ekf->_z, ekf->_H, ekf->h, ekf->numberOfStates);
   }
   // Calculate the Kalman gain: K = P_predicted * H^T * (H * P_predicted * H^T + R)^-1.
-  MATRIX_MATH_RETURN_CHECK(tranposeMatrix(ekf->_H, ekf->_H_TRANSPOSE));
+  MATRIX_MATH_RETURN_CHECK(transposeMatrix(ekf->_H, ekf->_H_TRANSPOSE));
   MATRIX_MATH_RETURN_CHECK(copyMatrix(ekf->P, ekf->_P));
   MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->P, ekf->_H_TRANSPOSE, ekf->_K));
   MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->_H, ekf->P, ekf->P));
@@ -153,7 +167,7 @@ EKFReturnCodes EKFUpdate(EKFState *ekf, EKFMeasurement *measurement)
   MATRIX_MATH_RETURN_CHECK(addMatrix(ekf->x, ekf->_z, ekf->x));
   // Update the state covariance matrix: P = (I - K * H) * P_predicted.
   MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->_K, ekf->_H, ekf->P));
-  MATRIX_MATH_RETURN_CHECK(idenityMatrixMinusA(ekf->P, ekf->P));
+  MATRIX_MATH_RETURN_CHECK(identityMatrixMinusA(ekf->P, ekf->P));
   MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->P, ekf->_P, ekf->P));
 } // EKFUpdate()
 
@@ -161,16 +175,29 @@ EKFReturnCodes EKFUpdate(EKFState *ekf, EKFMeasurement *measurement)
 void calculateJacobian(EKFMatrix *x, EKFMatrix *_x_predicted, EKFMatrix *Jacobian, EKFStateTransitionFunction f, int numOfStates)
 {
   int i, j;
+  matrixType temp;
+  matrixType epislon = EPSILON;
   for (i = 0; i < numOfStates; ++i) {
     // Perturb the state variable by EPSILON.
-    x->mat[i][0] += EPSILON;
+    if (x->jaggedAlloc) {
+      x->mat[i][0] += epislon;
+    }
+    else {
+      ACCESS_STATIC_MATRIX(*x, i, 0) += epislon;
+    }
     // Calculate the state transition function with the perturbed state variable.
     f(x, _x_predicted);
     // Calculate the Jacobian matrix, F, of the state transition function with respect to the state variables.
     for (j = 0; j < numOfStates; ++j) {
-      Jacobian->mat[j][i] = (_x_predicted->mat[j][0] - x->mat[j][0]) / EPSILON;
+      temp = (ACCESS_MATRIX(*_x_predicted, j, 0) - ACCESS_MATRIX(*x, j, 0)) / epislon;
+      if (Jacobian->jaggedAlloc) {
+        Jacobian->mat[j][i] = temp;
+      }
+      else {
+        ACCESS_STATIC_MATRIX(*Jacobian, j, i) = temp;
+      }
     } // for (j = 0; j < numOfStates; ++j)
     // Reset the state variable.
-    x->mat[i][0] -= EPSILON;
+    x->mat[i][0] -= epislon;
   } // for (i = 0; i < numOfStates; ++i
 } // calculateJacobian()
