@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    name: Build and Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure (Debug)
+        run: cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build (Debug)
+        run: cmake --build build-debug --config Debug
+
+      - name: Test (Debug)
+        run: ctest --test-dir build-debug -C Debug --output-on-failure
+
+      - name: Configure (Release)
+        run: cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build (Release)
+        run: cmake --build build-release --config Release
+
+      - name: Test (Release)
+        run: ctest --test-dir build-release -C Release --output-on-failure
+
+  coverage:
+    name: Coverage (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install gcovr
+        run: sudo apt-get update && sudo apt-get install -y gcovr
+
+      - name: Configure (Coverage)
+        run: cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON
+
+      - name: Build (Coverage)
+        run: cmake --build build-coverage --config Debug
+
+      - name: Coverage Report
+        run: cmake --build build-coverage --target coverage
+
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            build-coverage/*.html
+            build-coverage/*.xml
+          if-no-files-found: error
+
+  clang-format:
+    name: Clang Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format-14
+
+      - name: Check formatting
+        run: |
+          clang-format-14 --version
+          find inc src test -type f \( -name "*.c" -o -name "*.h" \) -print0 | xargs -0 clang-format-14 --dry-run --Werror
+
+  docs:
+    name: Generate Doxygen Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen + Graphviz
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+
+      - name: Generate docs
+        run: doxygen Doxyfile
+
+      - name: Upload Docs Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doxygen-docs
+          path: docs/html
+          if-no-files-found: error

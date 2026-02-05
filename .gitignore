@@ -50,3 +50,25 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+.vscode/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+lib/
+out/
+
+build/
+build-*/
+Testing/
+cmake-build-*/
+
+# If you mess up and do the CMAKE build in the source directory, this will clean it up
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+docs
+coverage.xml
