@@ -9,10 +9,13 @@ void gaussianElimination(struct matrix *a, struct matrix *idenity, struct matrix
 
 //Inputs are three matrixes. a and b matrix will be multiplied and the result will be output to res
 matrixReturnCodes multMatrix(struct matrix *a, struct matrix *b, struct matrix *res) {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 	NULL_CHECK_MATRIX(b);
 	
 	NULL_CHECK_MATRIX_RES(res);
+	NO_ALIAS_CHECK_MATRIX3(a, b, res);
 	
 	NON_INIT_CHECK_MATRIX(a);
 	NON_INIT_CHECK_MATRIX(b);
@@ -24,22 +27,7 @@ matrixReturnCodes multMatrix(struct matrix *a, struct matrix *b, struct matrix *
 	NAN_CHECK_MATRIX(b);
 
 	int i, j, k;
-	// TODO determine if this is needed
-	// zero out the result matrix
-	for (i = 0; i < res->row; ++i)
-	{
-		for (j = 0; j < res->col; ++j)
-		{
-			if (res->jaggedAlloc)
-			{
-				res->mat[i][j] = 0;
-			}
-			else
-			{
-				res->_mat[i * (*res).row + j] = 0;
-			}
-		}
-	}
+	ZEROIZE_MATRIX(*res, i, j);
 
 	// Do the multiplication
 	for (i = 0; i < a->row; ++i)
@@ -54,7 +42,7 @@ matrixReturnCodes multMatrix(struct matrix *a, struct matrix *b, struct matrix *
 				}
 				else
 				{
-					res->_mat[i * (*res).row + k] += ACCESS_MATRIX(*a, i, j) * ACCESS_MATRIX(*b, j, k);
+					ACCESS_STATIC_MATRIX(*res, i, k) += ACCESS_MATRIX(*a, i, j) * ACCESS_MATRIX(*b, j, k);
 				}
 			}
 		}
@@ -63,6 +51,8 @@ matrixReturnCodes multMatrix(struct matrix *a, struct matrix *b, struct matrix *
 }
 
 matrixReturnCodes scaleMatrix(struct matrix *a, struct matrix *res, matrixType scaler) {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 	NULL_CHECK_MATRIX_RES(res);
 
@@ -82,7 +72,7 @@ matrixReturnCodes scaleMatrix(struct matrix *a, struct matrix *res, matrixType s
 			}
 			else
 			{
-				res->_mat[i * (*res).row + j] = ACCESS_MATRIX(*a, i, j) * scaler;
+				ACCESS_STATIC_MATRIX(*res, i, j) = ACCESS_MATRIX(*a, i, j) * scaler;
 			}
 		}
 	}
@@ -90,10 +80,13 @@ matrixReturnCodes scaleMatrix(struct matrix *a, struct matrix *res, matrixType s
 }
 
 matrixReturnCodes addMatrix(struct matrix *a, struct matrix *b, struct matrix *res) {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 	NULL_CHECK_MATRIX(b);
 	
 	NULL_CHECK_MATRIX_RES(res);
+	NO_ALIAS_CHECK_MATRIX3(a, b, res);
 	
 	NON_INIT_CHECK_MATRIX(a);
 	NON_INIT_CHECK_MATRIX(b);
@@ -113,7 +106,7 @@ matrixReturnCodes addMatrix(struct matrix *a, struct matrix *b, struct matrix *r
 			}
 			else
 			{
-				res->_mat[arow * (*res).row + acol] = ACCESS_MATRIX(*a, arow, acol) + ACCESS_MATRIX(*b, arow, acol);
+				ACCESS_STATIC_MATRIX(*res, arow, acol) = ACCESS_MATRIX(*a, arow, acol) + ACCESS_MATRIX(*b, arow, acol);
 			}
 		}
 	}
@@ -122,6 +115,8 @@ matrixReturnCodes addMatrix(struct matrix *a, struct matrix *b, struct matrix *r
 }
 
 void printMatrix(struct matrix *a) {
+	LOG_FUNCTION();
+
 	if(a == NULL || !a->initilized) {
 		printf("Trying to print a uninitilized matrix");
 		return;
@@ -141,7 +136,7 @@ void printMatrix(struct matrix *a) {
 			#endif
 			if (j < a->col - 1)
 			{
-				printf(", ");
+				printf(",\t");
 			}
 		}
 	}
@@ -149,12 +144,14 @@ void printMatrix(struct matrix *a) {
 }
 
 matrixReturnCodes compareMatrieces(struct matrix *a, struct matrix *b) {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 	NULL_CHECK_MATRIX(b);
 
 	NON_INIT_CHECK_MATRIX(a);
 	NON_INIT_CHECK_MATRIX(b);
-	if(a->row != b->row || a->col != a->col) {
+	if(a->row != b->row || a->col != b->col) {
 		return MATRIX_DIMENSION_MISMATCH;
 	}
 	int i, j;
@@ -169,8 +166,11 @@ matrixReturnCodes compareMatrieces(struct matrix *a, struct matrix *b) {
 }
 
 matrixReturnCodes transposeMatrix(struct matrix *a, struct matrix *b) {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 	NULL_CHECK_MATRIX(b);
+	NO_ALIAS_CHECK_MATRIX2(a, b);
 
 	NON_INIT_CHECK_MATRIX(a);
 	NON_INIT_CHECK_MATRIX(b);
@@ -189,7 +189,7 @@ matrixReturnCodes transposeMatrix(struct matrix *a, struct matrix *b) {
 			}
 			else
 			{
-				b->_mat[j * (*b).row + i] = ACCESS_MATRIX(*a, i, j);
+				ACCESS_STATIC_MATRIX(*b, j, i) = ACCESS_MATRIX(*a, i, j);
 			}
 		}
 	}
@@ -198,10 +198,13 @@ matrixReturnCodes transposeMatrix(struct matrix *a, struct matrix *b) {
 
 matrixReturnCodes subMatrix(struct matrix *a, struct matrix *b, struct matrix *res)
 {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 	NULL_CHECK_MATRIX(b);
 	
 	NULL_CHECK_MATRIX_RES(res);
+	NO_ALIAS_CHECK_MATRIX3(a, b, res);
 	
 	NON_INIT_CHECK_MATRIX(a);
 	NON_INIT_CHECK_MATRIX(b);
@@ -221,7 +224,7 @@ matrixReturnCodes subMatrix(struct matrix *a, struct matrix *b, struct matrix *r
 			}
 			else
 			{
-				res->_mat[arow * (*res).row + acol] = ACCESS_MATRIX(*a, arow, acol) - ACCESS_MATRIX(*b, arow, acol);
+				ACCESS_STATIC_MATRIX(*res, arow, acol) = ACCESS_MATRIX(*a, arow, acol) - ACCESS_MATRIX(*b, arow, acol);
 			}
 		}
 	}
@@ -231,9 +234,12 @@ matrixReturnCodes subMatrix(struct matrix *a, struct matrix *b, struct matrix *r
 
 matrixReturnCodes inverseMatrix(struct matrix *a, struct matrix *res)
 {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 	
 	NULL_CHECK_MATRIX_RES(res);
+	NO_ALIAS_CHECK_MATRIX2(a, res);
 	
 	NON_INIT_CHECK_MATRIX(a);
 	NON_INIT_CHECK_MATRIX(res);
@@ -252,7 +258,7 @@ matrixReturnCodes inverseMatrix(struct matrix *a, struct matrix *res)
 			}
 			else
 			{
-				res->_mat[i * (*res).row + j] = 0;
+				ACCESS_STATIC_MATRIX(*res, i, j) = 0;
 			}
 		}
 	}
@@ -277,11 +283,92 @@ matrixReturnCodes inverseMatrix(struct matrix *a, struct matrix *res)
 	return MATRIX_SUCCESS;
 }
 
+matrixReturnCodes inverseMatrixWithJitter(struct matrix *a, struct matrix *res, matrixType jitter, int maxAttempts, matrixType jitterScale)
+{
+	LOG_FUNCTION();
+
+	NULL_CHECK_MATRIX(a);
+
+	NULL_CHECK_MATRIX_RES(res);
+	NO_ALIAS_CHECK_MATRIX2(a, res);
+
+	NON_INIT_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(res);
+
+	NAN_CHECK_MATRIX(a);
+
+	if (a->row != a->col || res->row != res->col || a->row != res->row)
+	{
+		return MATRIX_DIMENSION_MISMATCH;
+	}
+	if (maxAttempts <= 0 || jitter <= 0)
+	{
+		return MATRIX_ERROR;
+	}
+
+	matrixReturnCodes invRet = MATRIX_ERROR;
+	for (int attempt = 0; attempt < maxAttempts; ++attempt)
+	{
+		invRet = inverseMatrix(a, res);
+		if (invRet == MATRIX_SUCCESS)
+		{
+			return MATRIX_SUCCESS;
+		}
+		for (int i = 0; i < a->row; ++i)
+		{
+			if (a->jaggedAlloc)
+			{
+				a->mat[i][i] += jitter;
+			}
+			else
+			{
+				ACCESS_STATIC_MATRIX(*a, i, i) += jitter;
+			}
+		}
+		jitter *= jitterScale;
+	}
+	return invRet;
+}
+
+matrixReturnCodes setIdentityMatrix(struct matrix *a)
+{
+	LOG_FUNCTION();
+
+	NULL_CHECK_MATRIX(a);
+	NON_INIT_CHECK_MATRIX(a);
+
+	if (a->row != a->col)
+	{
+		return MATRIX_DIMENSION_MISMATCH;
+	}
+
+	for (int i = 0; i < a->row; ++i)
+	{
+		for (int j = 0; j < a->col; ++j)
+		{
+			matrixType val = (i == j) ? 1 : 0;
+			if (a->jaggedAlloc)
+			{
+				a->mat[i][j] = val;
+			}
+			else
+			{
+				ACCESS_STATIC_MATRIX(*a, i, j) = val;
+			}
+		}
+	}
+
+	return MATRIX_SUCCESS;
+}
+
 matrixReturnCodes identityMatrixMinusA(struct matrix *a, struct matrix *res)
 {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 	
 	NULL_CHECK_MATRIX_RES(res);
+	NO_ALIAS_CHECK_MATRIX2(a, res);
 	
 	NON_INIT_CHECK_MATRIX(a);
 	NON_INIT_CHECK_MATRIX(res);
@@ -311,11 +398,11 @@ matrixReturnCodes identityMatrixMinusA(struct matrix *a, struct matrix *res)
 				{
 					if (i == j)
 					{
-						res->_mat[i * (*res).row + j] = 1 - ACCESS_MATRIX(*a, i, j);
+					ACCESS_STATIC_MATRIX(*res, i, j) = 1 - ACCESS_MATRIX(*a, i, j);
 					}
 					else
 					{
-						res->_mat[i * (*res).row + j] = -ACCESS_MATRIX(*a, i, j);
+					ACCESS_STATIC_MATRIX(*res, i, j) = -ACCESS_MATRIX(*a, i, j);
 					}
 				}
 			}
@@ -331,9 +418,12 @@ matrixReturnCodes identityMatrixMinusA(struct matrix *a, struct matrix *res)
 
 matrixReturnCodes copyMatrix(struct matrix *a, struct matrix *res)
 {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 
 	NULL_CHECK_MATRIX_RES(res);
+	NO_ALIAS_CHECK_MATRIX2(a, res);
 
 	NON_INIT_CHECK_MATRIX(a);
 	NON_INIT_CHECK_MATRIX(res);
@@ -350,7 +440,7 @@ matrixReturnCodes copyMatrix(struct matrix *a, struct matrix *res)
 			}
 			else
 			{
-				res->_mat[i * (*res).row + j] = ACCESS_MATRIX(*a, i, j);
+				ACCESS_STATIC_MATRIX(*res, i, j) = ACCESS_MATRIX(*a, i, j);
 			}
 		}
 	}
@@ -359,6 +449,8 @@ matrixReturnCodes copyMatrix(struct matrix *a, struct matrix *res)
 
 matrixReturnCodes nanCheckMatrix(struct matrix *a)
 {
+	LOG_FUNCTION();
+
 	NULL_CHECK_MATRIX(a);
 
 	NON_INIT_CHECK_MATRIX(a);
@@ -380,6 +472,8 @@ matrixReturnCodes nanCheckMatrix(struct matrix *a)
 
 void gaussianElimination(struct matrix *a, struct matrix *idenity, struct matrix *res)
 {
+	LOG_FUNCTION();
+
 	matrixType temp;
 	matrixType ratio;
 
@@ -399,7 +493,7 @@ void gaussianElimination(struct matrix *a, struct matrix *idenity, struct matrix
 				}
 				else
 				{
-					idenity->_mat[i * (*idenity).row + j] = 1;
+					ACCESS_STATIC_MATRIX(*idenity, i, j) = 1;
 				}
 			}
 			else
@@ -410,7 +504,7 @@ void gaussianElimination(struct matrix *a, struct matrix *idenity, struct matrix
 				}
 				else
 				{
-					idenity->_mat[i * (*idenity).row + j] = 0;
+					ACCESS_STATIC_MATRIX(*idenity, i, j) = 0;
 				}
 			}
 		}
@@ -428,7 +522,7 @@ void gaussianElimination(struct matrix *a, struct matrix *idenity, struct matrix
 			}
 			else
 			{
-				res->_mat[i * (*res).row + j] /= temp;
+				ACCESS_STATIC_MATRIX(*res, i, j) /= temp;
 			}
 			if (idenity->jaggedAlloc)
 			{
@@ -436,7 +530,7 @@ void gaussianElimination(struct matrix *a, struct matrix *idenity, struct matrix
 			}
 			else
 			{
-				idenity->_mat[i * (*idenity).row + j] /= temp;
+				ACCESS_STATIC_MATRIX(*idenity, i, j) /= temp;
 			}
 		}
 
@@ -455,7 +549,7 @@ void gaussianElimination(struct matrix *a, struct matrix *idenity, struct matrix
 					}
 					else
 					{
-						res->_mat[k * (*res).row + j] -= ratio * ACCESS_MATRIX(*res, i, j);
+					ACCESS_STATIC_MATRIX(*res, k, j) -= ratio * ACCESS_MATRIX(*res, i, j);
 					}
 					if (idenity->jaggedAlloc)
 					{
@@ -463,7 +557,7 @@ void gaussianElimination(struct matrix *a, struct matrix *idenity, struct matrix
 					}
 					else
 					{
-						idenity->_mat[k * (*idenity).row + j] -= ratio * ACCESS_MATRIX(*idenity, i, j);
+					ACCESS_STATIC_MATRIX(*idenity, k, j) -= ratio * ACCESS_MATRIX(*idenity, i, j);
 					}
 				}
 			}

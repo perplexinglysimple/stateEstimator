@@ -1,3 +1,7 @@
+/**
+ * @file matrixMath.h
+ * @brief Matrix math types, macros, and operations used by the EKF.
+ */
 #ifndef MATRIX_MATH
 #define MATRIX_MATH
 
@@ -8,12 +12,19 @@
 
 #include "utils.h"
 
+/** @brief Numeric precision used throughout the EKF math layer. */
 // CHANGE THIS TO FLOAT OR DOUBLE DEPENDING ON YOUR NEEDS
 typedef double ekfType;
 
-// If defined, the matrix math functions will check for NaNs and infinities
-// This is useful for debugging, but will slow down the code
-#define NAN_CHECK
+// Enable extra matrix math checks in debug builds (disabled in release).
+// Define MATRIX_MATH_DEBUG_CHECKS=1 to force-enable in any build.
+#ifndef MATRIX_MATH_DEBUG_CHECKS
+#if defined(NDEBUG)
+#define MATRIX_MATH_DEBUG_CHECKS 0
+#else
+#define MATRIX_MATH_DEBUG_CHECKS 1
+#endif
+#endif
 
 #ifndef MATRIXTYPE
 #define MATRIXTYPE
@@ -29,6 +40,7 @@ typedef int matrixType;
 #define _INT
 #endif
 
+/** @brief Return codes for matrix operations. */
 typedef enum matrixReturnCodes_ {
 	MATRIX_SUCCESS = 0,
 	MATRIX_ERROR = -1,
@@ -41,6 +53,12 @@ typedef enum matrixReturnCodes_ {
 	MATRIX_INF_FAILURE = -8,
 } matrixReturnCodes;
 
+/**
+ * @brief Dense matrix container.
+ *
+ * Matrices can be allocated in "jagged" mode (array of row pointers) or
+ * in a contiguous static buffer via STATIC_MATRIX_DIRECTIVE.
+ */
 struct matrix {
 	matrixType **mat;
 	matrixType *_mat;
@@ -50,6 +68,7 @@ struct matrix {
 	bool jaggedAlloc;
 };
 
+/** @brief Allocate and zero-initialize a jagged matrix. */
 #define INIT_MATRIX(ptr, _row, _col) \
 	do { \
 	    FREE_MATRIX(ptr); \
@@ -72,39 +91,76 @@ struct matrix {
 #define __CONCAT(a, b) __CONCAT_INNER(a, b)
 #define __CONCAT_INNER(a, b) a ## b
 
-#define UNIQUE_NAME(base) __CONCAT(base, __COUNTER__)
+#define MM_UNIQUE_NAME(base) __CONCAT(base, __COUNTER__)
 #define UNIQUE_NAME_PER_MACRO(base) __CONCAT(base, __LINE__)
 
+/** @brief Access element (i, j) from a static matrix. */
 #define ACCESS_STATIC_MATRIX(m, i, j) \
-	(m)._mat[i * (m).row + j]
+	(m)._mat[i * (m).col + j]
 
+/** @brief Access element (i, j) from a matrix, regardless of allocation mode. */
 #define ACCESS_MATRIX(m, i, j) \
 	(matrixType) ((m).jaggedAlloc ? (m).mat[i][j] : ACCESS_STATIC_MATRIX(m, i, j))
 
-#define ZEROIZE_MATRIX(m, i, j, _row, _col) \
-	for(i = 0; i < m.row; ++i) { \
-		for(j = 0; j < m.col; ++j) { \
-			ACCESS_MATRIX(m, i, j) = 0; \
+/** @brief Set element (i, j) in a matrix, regardless of allocation mode. */
+#define SET_MATRIX(m, i, j, val) \
+	do { \
+		if ((m).jaggedAlloc) { \
+			(m).mat[i][j] = (val); \
+		} else { \
+			ACCESS_STATIC_MATRIX((m), i, j) = (val); \
+		} \
+	} while (0)
+
+#define ZEROIZE_MATRIX(m, i, j) \
+	for(i = 0; i < (m).row; ++i) { \
+		for(j = 0; j < (m).col; ++j) { \
+			SET_MATRIX((m), i, j, 0); \
 		} \
 	}
 
-#define _ZEROIZE_MATRIX(m, i, j, _row, _col) \
+#define _ZEROIZE_MATRIX(m, i, j) \
 	for(i = 0; i < m.row; ++i) { \
 		for(j = 0; j < m.col; ++j) { \
 			ACCESS_STATIC_MATRIX(m, i, j) = 0; \
 		} \
 	}
 
+/** @brief Copy a 2D C array into a matrix. */
+#define COPY_2DARRAY_TO_MATRIX(array, matrixptr) \
+	do { \
+		int _i, _j; \
+		for(_i = 0; _i < matrixptr->row; ++_i) { \
+			for(_j = 0; _j < matrixptr->col; ++_j) { \
+				if (matrixptr->jaggedAlloc) \
+				{ \
+					matrixptr->mat[_i][_j] = array[_i][_j]; \
+				} \
+				else \
+				{ \
+					matrixptr->_mat[_i * (*matrixptr).col + _j] = array[_i][_j]; \
+				} \
+			} \
+		} \
+	} while(0)
+
+/**
+ * @brief Create a static matrix with storage backing.
+ *
+ * This macro declares a static 2D array and binds a struct matrix to it.
+ * It is not thread-safe and should not be used in concurrent contexts.
+ */
 #define STATIC_MATRIX_DIRECTIVE(ptr, _row, _col, name) \
 	static matrixType __CONCAT(name, UNIQUE_NAME_PER_MACRO(m_mat))[(_row)][(_col)]; \
 	static struct matrix __CONCAT(name, UNIQUE_NAME_PER_MACRO(m)) = { .mat = NULL, .initilized = 1, .row = (_row), .col = (_col), .jaggedAlloc = false }; \
 	__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)).mat = (matrixType **)__CONCAT(name, UNIQUE_NAME_PER_MACRO(m_mat)); \
 	__CONCAT(name, UNIQUE_NAME_PER_MACRO(m))._mat = (matrixType *)__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)).mat; \
 	int __CONCAT(name, UNIQUE_NAME_PER_MACRO(i)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(j)); \
-	_ZEROIZE_MATRIX(__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(i)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(j)), (_row), (_col)); \
+	_ZEROIZE_MATRIX(__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(i)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(j))); \
 	ptr = &__CONCAT(name, UNIQUE_NAME_PER_MACRO(m));
 	
 
+/** @brief Free a jagged matrix allocated with INIT_MATRIX. */
 #define FREE_MATRIX(ptr) \
 	do { \
 	    if(ptr != NULL) { \
@@ -123,6 +179,7 @@ struct matrix {
 		} \
 	} while(0)
 
+#if MATRIX_MATH_DEBUG_CHECKS
 #define NULL_CHECK_MATRIX(ptr) \
 	do { \
 		if(ptr == NULL) { \
@@ -130,7 +187,11 @@ struct matrix {
 			return MATRIX_NULL_POINTER; \
 		} \
 	} while(0)
+#else
+#define NULL_CHECK_MATRIX(ptr)
+#endif
 
+#if MATRIX_MATH_DEBUG_CHECKS
 #define NULL_CHECK_MATRIX_RES(ptr) \
 	do { \
 		if(ptr == NULL) { \
@@ -138,7 +199,11 @@ struct matrix {
 			return MATRIX_NULL_RES_POINTER; \
 		} \
 	} while(0)
+#else
+#define NULL_CHECK_MATRIX_RES(ptr)
+#endif
 
+#if MATRIX_MATH_DEBUG_CHECKS
 #define NON_INIT_CHECK_MATRIX(ptr) \
 	do { \
 		if(ptr->initilized == 0) { \
@@ -146,7 +211,33 @@ struct matrix {
 			return MATRIX_NOT_INITIALIZED; \
 		} \
 	} while(0)
+#else
+#define NON_INIT_CHECK_MATRIX(ptr)
+#endif
 
+// Guard against in-place usage unless explicitly allowed.
+#if MATRIX_MATH_DEBUG_CHECKS
+#define NO_ALIAS_CHECK_MATRIX2(a, res) \
+	do { \
+		if ((res) == (a)) { \
+			LOG_ERROR("NO_ALIAS_CHECK_MATRIX2: res must not alias input"); \
+			return MATRIX_ERROR; \
+		} \
+	} while(0)
+
+#define NO_ALIAS_CHECK_MATRIX3(a, b, res) \
+	do { \
+		if ((res) == (a) || (res) == (b)) { \
+			LOG_ERROR("NO_ALIAS_CHECK_MATRIX3: res must not alias inputs"); \
+			return MATRIX_ERROR; \
+		} \
+	} while(0)
+#else
+#define NO_ALIAS_CHECK_MATRIX2(a, res)
+#define NO_ALIAS_CHECK_MATRIX3(a, b, res)
+#endif
+
+#if MATRIX_MATH_DEBUG_CHECKS
 #define DIMENSION_CHECK_MULT_MATRIX(a, b, res) \
 	do { \
 		if(a->col != b->row || a->row != res->row || b->col != res->col) { \
@@ -155,7 +246,11 @@ struct matrix {
 			return MATRIX_DIMENSION_MISMATCH; \
 		} \
 	} while(0)
+#else
+#define DIMENSION_CHECK_MULT_MATRIX(a, b, res)
+#endif
 
+#if MATRIX_MATH_DEBUG_CHECKS
 #define DIMENSION_CHECK_SCALER_MATRIX(a, res) \
 	do { \
 		if(a->col != res->col || a->row != res->row) { \
@@ -163,7 +258,11 @@ struct matrix {
 			return MATRIX_DIMENSION_MISMATCH; \
 		} \
 	} while(0)
+#else
+#define DIMENSION_CHECK_SCALER_MATRIX(a, res)
+#endif
 		
+#if MATRIX_MATH_DEBUG_CHECKS
 #define DIMENSION_CHECK_ADD_MATRIX(a, b, res) \
 	do { \
 		if(a->col != b->col || a->row != b->row || a->col != res->col || a->row != res->row) { \
@@ -171,8 +270,11 @@ struct matrix {
 			return MATRIX_DIMENSION_MISMATCH; \
 		} \
 	} while(0)
+#else
+#define DIMENSION_CHECK_ADD_MATRIX(a, b, res)
+#endif
 
-#if defined(NAN_CHECK)
+#if MATRIX_MATH_DEBUG_CHECKS
 #define NAN_CHECK_MATRIX(a) \
 	do { \
 		if(nanCheckMatrix(a) != MATRIX_SUCCESS) { \
@@ -186,26 +288,81 @@ struct matrix {
 	
 	
 // ------------------------- Public Functions ------------------------- //
+/**
+ * @brief Multiply two matrices (res = a * b).
+ * @note Not safe for in-place usage. res must not alias a or b.
+ */
 matrixReturnCodes multMatrix(struct matrix *a, struct matrix *b, struct matrix *res);
 
+/**
+ * @brief Scale a matrix (res = a * scaler).
+ * @note Safe for in-place usage when res == a.
+ */
 matrixReturnCodes scaleMatrix(struct matrix *a, struct matrix *res, matrixType scaler);
 
+/**
+ * @brief Add two matrices (res = a + b).
+ * @note Not safe for in-place usage. res must not alias a or b.
+ */
 matrixReturnCodes addMatrix(struct matrix *a, struct matrix *b, struct matrix *res);
 
+/**
+ * @brief Subtract two matrices (res = a - b).
+ * @note Not safe for in-place usage. res must not alias a or b.
+ */
 matrixReturnCodes subMatrix(struct matrix *a, struct matrix *b, struct matrix *res);
 
+/**
+ * @brief Invert a matrix (res = a^-1).
+ * @note Not safe for in-place usage. res must not alias a.
+ */
 matrixReturnCodes inverseMatrix(struct matrix *a, struct matrix *res);
 
+/**
+ * @brief Invert a matrix with diagonal jitter retry (res = a^-1).
+ * @note Not safe for in-place usage. res must not alias a.
+ * @note This function mutates a by adding jitter to the diagonal on failed attempts.
+ */
+matrixReturnCodes inverseMatrixWithJitter(struct matrix *a, struct matrix *res, matrixType jitter, int maxAttempts, matrixType jitterScale);
+
+/**
+ * @brief Set matrix to identity.
+ * @note Only valid for square matrices.
+ */
+matrixReturnCodes setIdentityMatrix(struct matrix *a);
+
+/**
+ * @brief Transpose a matrix (res = a^T).
+ * @note Not safe for in-place usage. res must not alias a.
+ */
 matrixReturnCodes transposeMatrix(struct matrix *a, struct matrix *b);
 
+/**
+ * @brief Compute (I - A) into res.
+ * @note Not safe for in-place usage. res must not alias a.
+ */
 matrixReturnCodes identityMatrixMinusA(struct matrix *a, struct matrix *res);
 
+/**
+ * @brief Compare two matrices for exact equality.
+ * @note Safe when a and b alias.
+ */
 matrixReturnCodes compareMatrieces(struct matrix *a, struct matrix *b);
 
+/**
+ * @brief Print a matrix to stdout.
+ */
 void printMatrix(struct matrix *a);
 
+/**
+ * @brief Copy matrix a into res.
+ * @note Not safe for in-place usage. res must not alias a.
+ */
 matrixReturnCodes copyMatrix(struct matrix *a, struct matrix *res);
 
+/**
+ * @brief Check matrix for NaN values.
+ */
 matrixReturnCodes nanCheckMatrix(struct matrix *a);
 
 #endif

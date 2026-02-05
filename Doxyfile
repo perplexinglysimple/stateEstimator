@@ -1,0 +1,14 @@
+# Doxygen configuration for stateEstimator
+
+PROJECT_NAME           = "stateEstimator"
+OUTPUT_DIRECTORY       = docs
+INPUT                  = inc src
+FILE_PATTERNS          = *.h *.c
+RECURSIVE              = YES
+EXTRACT_ALL            = YES
+EXTRACT_STATIC         = YES
+JAVADOC_AUTOBRIEF      = YES
+WARN_IF_UNDOCUMENTED   = YES
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+QUIET                  = YES

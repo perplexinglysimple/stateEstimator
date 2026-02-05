@@ -1,3 +1,7 @@
+/**
+ * @file utils.h
+ * @brief Lightweight logging and portability helpers.
+ */
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -35,25 +39,40 @@
 #define _LOG_MSG_MACRO_CHOOSER(...) \
     GET_3RD_ARG(__VA_ARGS__, PRINTF_1ARGS, PRINTF_2ARG, )( __VA_ARGS__)
 
-#ifdef __FILENAME__ 
+#ifndef __FILENAME__
+#ifdef __linux__
+#include <libgen.h>
+#define GET_FILENAME(path) basename(path)
+#elif _WIN32
+#include <windows.h>
+#include <tchar.h>
+#define MAX_PATH_LENGTH 256
+
+/** @brief Extract the filename portion from a Windows path. */
+const char* GetFileNameFromPath(const char* path);
+
+#define GET_FILENAME(path) GetFileNameFromPath(path)
+#else
+#error "Unsupported platform"
+#endif
+#define __FILENAME__ GET_FILENAME(__FILE__)
+#endif
+
 #define LOG_MSG_PRINTF(msg, level, ...) \
     do { \
         printf("[%s:%d] %s: ", __FILENAME__, __LINE__, level); \
         _VA_OPT_PRINTF_CHECK(msg, __VA_ARGS__); \
         printf("\n"); \
     } while (0)
-#else
-#define LOG_MSG_PRINTF(msg, level, ...) \
-    do { \
-        printf("[%s:%d] %s: ", __FILE__, __LINE__, level); \
-        _VA_OPT_PRINTF_CHECK(msg, __VA_ARGS__); \
-        printf("\n"); \
-    } while (0)
-#endif
 
+/** @brief Log the current function name at INFO level. */
+#define LOG_FUNCTION() LOG_MSG_PRINTF("%s called", "INFO", __func__)
 
+/** @brief Log an error message. */
 #define LOG_ERROR(msg, ...) LOG_MSG_PRINTF(msg, "ERROR", __VA_ARGS__)
+/** @brief Log a warning message. */
 #define LOG_WARNING(msg, ...) LOG_MSG_PRINTF(msg, "WARNING", __VA_ARGS__)
+/** @brief Log an info message. */
 #define LOG_INFO(msg, ...) LOG_MSG_PRINTF(msg, "INFO", __VA_ARGS__)
 
 #endif
