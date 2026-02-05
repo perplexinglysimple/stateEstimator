@@ -10,8 +10,7 @@ void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void
 
 void MotionModelUpdateCallback(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double time, void* userData);
 
-
-int nanCheckVariable(EKFState *ekf);
+int nanCheckVariable(EKFState* ekf);
 
 /** Here is a picture of the state struct for a random walk model:
  *
@@ -21,7 +20,7 @@ int nanCheckVariable(EKFState *ekf);
  *     [y_v]
  *     [x_a]
  *     [y_a]
- * 
+ *
  * P0 is the initial state covariance matrix.
  * P0 = [1 0 0 0 0 0]
  *      [0 1 0 0 0 0]
@@ -29,15 +28,15 @@ int nanCheckVariable(EKFState *ekf);
  *      [0 0 0 1 0 0]
  *      [0 0 0 0 1 0]
  *      [0 0 0 0 0 1]
- * 
+ *
  * Q is the process noise covariance matrix.
  * Q = [0.01 0    0    0    0    0   ]
  *     [0    0.01 0    0    0    0   ]
  *     [0    0    0.01 0    0    0   ]
- *     [0    0    0    0.01 0    0   ] 
+ *     [0    0    0    0.01 0    0   ]
  *     [0    0    0    0    0.01 0   ]
  *     [0    0    0    0    0    0.01]
- * 
+ *
  * R is the measurement noise covariance matrix.
  * R = [0.01 0    0    0    0    0   ]
  *     [0    0.01 0    0    0    0   ]
@@ -45,7 +44,7 @@ int nanCheckVariable(EKFState *ekf);
  *     [0    0    0    0.01 0    0   ]
  *     [0    0    0    0    0.01 0   ]
  *     [0    0    0    0    0    0.01]
- * 
+ *
  * A is the state transition matrix.
  * A = [1 0 dt  0    0.5*dt^2    0   ]
  *     [0 1 0    dt  0    0.5*dt^2 ]
@@ -53,7 +52,7 @@ int nanCheckVariable(EKFState *ekf);
  *     [0 0 0    1    0    dt ]
  *     [0 0 0    0    1    0   ]
  *     [0 0 0    0    0    1   ]
- * 
+ *
  * The inputs to the ekf
  * 1. GPS position with LAT and LON and altitude. The LAT and LON are in the WGS84 coordinate system.
  *    x = [LAT]
@@ -91,9 +90,9 @@ int nanCheckVariable(EKFState *ekf);
  *     Resolution = 0.1 (This is the resolution of the magnetometer)
  *     ConstantBias = 0.1 (This is the constant bias of the magnetometer)
  *     NoiseDensity = 0.1 (This is the noise density of the magnetometer)
- * 
+ *
  * This will result in the H matrix being:
- * 
+ *
  */
 
 #define stateSize 6
@@ -126,31 +125,15 @@ int main()
     options.mallocFlag = true;
 
     ekfType startx0[stateSize][1] = {{0}, {0}, {0}, {0}, {0}, {0}};
-    ekfType startP0[stateSize][stateSize] = {{1, 0, 0, 0, 0, 0},
-                                             {0, 1, 0, 0, 0, 0},
-                                             {0, 0, 1, 0, 0, 0},
-                                             {0, 0, 0, 1, 0, 0},
-                                             {0, 0, 0, 0, 1, 0},
-                                             {0, 0, 0, 0, 0, 1}};
-    ekfType startQ[stateSize][stateSize] = {{0.01, 0, 0, 0, 0, 0},
-                                            {0, 0.01, 0, 0, 0, 0},
-                                            {0, 0, 0.01, 0, 0, 0},
-                                            {0, 0, 0, 0.01, 0, 0},
-                                            {0, 0, 0, 0, 0.01, 0},
-                                            {0, 0, 0, 0, 0, 0.01}};
-    ekfType startR[stateSize][stateSize] = {{0.01, 0, 0, 0, 0, 0},
-                                            {0, 0.01, 0, 0, 0, 0},
-                                            {0, 0, 0.01, 0, 0, 0},
-                                            {0, 0, 0, 0.01, 0, 0},
-                                            {0, 0, 0, 0, 0.01, 0},
-                                            {0, 0, 0, 0, 0, 0.01}};
-    ekfType startA[stateSize][stateSize] = {{1, 0, 0.1, 0, 0.005, 0},
-                                            {0, 1, 0, 0.1, 0, 0.005},
-                                            {0, 0, 1, 0, 0.1, 0},
-                                            {0, 0, 0, 1, 0, 0.1},
-                                            {0, 0, 0, 0, 1, 0},
-                                            {0, 0, 0, 0, 0, 1}};
-                                    
+    ekfType startP0[stateSize][stateSize] = {{1, 0, 0, 0, 0, 0}, {0, 1, 0, 0, 0, 0}, {0, 0, 1, 0, 0, 0},
+                                             {0, 0, 0, 1, 0, 0}, {0, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 0, 1}};
+    ekfType startQ[stateSize][stateSize] = {{0.01, 0, 0, 0, 0, 0}, {0, 0.01, 0, 0, 0, 0}, {0, 0, 0.01, 0, 0, 0},
+                                            {0, 0, 0, 0.01, 0, 0}, {0, 0, 0, 0, 0.01, 0}, {0, 0, 0, 0, 0, 0.01}};
+    ekfType startR[stateSize][stateSize] = {{0.01, 0, 0, 0, 0, 0}, {0, 0.01, 0, 0, 0, 0}, {0, 0, 0.01, 0, 0, 0},
+                                            {0, 0, 0, 0.01, 0, 0}, {0, 0, 0, 0, 0.01, 0}, {0, 0, 0, 0, 0, 0.01}};
+    ekfType startA[stateSize][stateSize] = {{1, 0, 0.1, 0, 0.005, 0}, {0, 1, 0, 0.1, 0, 0.005}, {0, 0, 1, 0, 0.1, 0},
+                                            {0, 0, 0, 1, 0, 0.1},     {0, 0, 0, 0, 1, 0},       {0, 0, 0, 0, 0, 1}};
+
     COPY_2DARRAY_TO_MATRIX(startx0, options.x0);
     COPY_2DARRAY_TO_MATRIX(startP0, options.P0);
     COPY_2DARRAY_TO_MATRIX(startQ, options.Q);
@@ -193,7 +176,9 @@ int main()
             return -1;
         }
         LOG_INFO("Predicted state:");
-        LOG_INFO("x = %f, y = %f, x_v = %f, y_v = %f, x_a = %f, y_a = %f", ACCESS_MATRIX(*(ekf.x), 0, 0), ACCESS_MATRIX(*(ekf.x), 1, 0), ACCESS_MATRIX(*(ekf.x), 2, 0), ACCESS_MATRIX(*(ekf.x), 3, 0), ACCESS_MATRIX(*(ekf.x), 4, 0), ACCESS_MATRIX(*(ekf.x), 5, 0));
+        LOG_INFO("x = %f, y = %f, x_v = %f, y_v = %f, x_a = %f, y_a = %f", ACCESS_MATRIX(*(ekf.x), 0, 0),
+                 ACCESS_MATRIX(*(ekf.x), 1, 0), ACCESS_MATRIX(*(ekf.x), 2, 0), ACCESS_MATRIX(*(ekf.x), 3, 0),
+                 ACCESS_MATRIX(*(ekf.x), 4, 0), ACCESS_MATRIX(*(ekf.x), 5, 0));
         // Only update the state with a measurement every 10 iterations.
         if (count % 10 != 0)
         {
@@ -209,24 +194,26 @@ int main()
         ACCESS_STATIC_MATRIX(*(z.z), 4, 0) = 0;
         ACCESS_STATIC_MATRIX(*(z.z), 5, 0) = 0;
         // Generate a random number between 0 and 1.
-        ekfType randNum = .9;//(ekfType)rand() / (ekfType)RAND_MAX;
+        ekfType randNum = .9; //(ekfType)rand() / (ekfType)RAND_MAX;
         // If the random number is less than 0.1, then the measurement will have a large error.
         if (randNum < 0.1)
         {
             // We can only move by 0.1 in any direction.
-            xadd = (ekfType)rand() / (ekfType)RAND_MAX * 10;
-            yadd = (ekfType)rand() / (ekfType)RAND_MAX * 10;
+            xadd = (ekfType) rand() / (ekfType) RAND_MAX * 10;
+            yadd = (ekfType) rand() / (ekfType) RAND_MAX * 10;
         }
         else
         {
             // We can only move by 0.1 in any direction.
-            xadd = (ekfType)rand() / (ekfType)RAND_MAX * 0.1;
-            yadd = (ekfType)rand() / (ekfType)RAND_MAX * 0.1;
+            xadd = (ekfType) rand() / (ekfType) RAND_MAX * 0.1;
+            yadd = (ekfType) rand() / (ekfType) RAND_MAX * 0.1;
         }
         ACCESS_STATIC_MATRIX(*(z.z), 0, 0) += xadd;
         ACCESS_STATIC_MATRIX(*(z.z), 1, 0) += yadd;
         LOG_INFO("Measurement:");
-        LOG_INFO("x = %f, y = %f, x_v = %f, y_v = %f, x_a = %f, y_a = %f", ACCESS_MATRIX(*(z.z), 0, 0), ACCESS_MATRIX(*(z.z), 1, 0), ACCESS_MATRIX(*(z.z), 2, 0), ACCESS_MATRIX(*(z.z), 3, 0), ACCESS_MATRIX(*(z.z), 4, 0), ACCESS_MATRIX(*(z.z), 5, 0));
+        LOG_INFO("x = %f, y = %f, x_v = %f, y_v = %f, x_a = %f, y_a = %f", ACCESS_MATRIX(*(z.z), 0, 0),
+                 ACCESS_MATRIX(*(z.z), 1, 0), ACCESS_MATRIX(*(z.z), 2, 0), ACCESS_MATRIX(*(z.z), 3, 0),
+                 ACCESS_MATRIX(*(z.z), 4, 0), ACCESS_MATRIX(*(z.z), 5, 0));
         // Update the state with a measurement.
         if (EKFUpdate(&ekf, &z) != EKF_SUCCESS)
         {
@@ -234,7 +221,9 @@ int main()
             return -1;
         }
         LOG_INFO("Updated state:");
-        LOG_INFO("x = %f, y = %f, x_v = %f, y_v = %f, x_a = %f, y_a = %f", ACCESS_MATRIX(*(ekf.x), 0, 0), ACCESS_MATRIX(*(ekf.x), 1, 0), ACCESS_MATRIX(*(ekf.x), 2, 0), ACCESS_MATRIX(*(ekf.x), 3, 0), ACCESS_MATRIX(*(ekf.x), 4, 0), ACCESS_MATRIX(*(ekf.x), 5, 0));
+        LOG_INFO("x = %f, y = %f, x_v = %f, y_v = %f, x_a = %f, y_a = %f", ACCESS_MATRIX(*(ekf.x), 0, 0),
+                 ACCESS_MATRIX(*(ekf.x), 1, 0), ACCESS_MATRIX(*(ekf.x), 2, 0), ACCESS_MATRIX(*(ekf.x), 3, 0),
+                 ACCESS_MATRIX(*(ekf.x), 4, 0), ACCESS_MATRIX(*(ekf.x), 5, 0));
         if (nanCheckVariable(&ekf) != 0)
         {
             LOG_ERROR("nanCheckVariable() found a NaN in the EKFState struct.");
@@ -268,19 +257,19 @@ int main()
  * H = [ cos(b) 0 sin(b) 0;
         -sin(b)/r 0 cos(b)/r 0];]
  */
-void TransitionFunction(EKFMatrix *x, EKFMatrix *x_predicted, EKFState* ekf, void* userData)
+void TransitionFunction(EKFMatrix* x, EKFMatrix* x_predicted, EKFState* ekf, void* userData)
 {
-    (void)userData;
+    (void) userData;
     LOG_FUNCTION();
-    
+
     // x_predicted = A*x. Using A from the EKFState struct.
     multMatrix(ekf->A, x, x_predicted);
 }
 
-void MeasurementFunction(EKFMatrix *x, EKFMatrix *z, EKFState* ekf, void* userData)
+void MeasurementFunction(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     LOG_FUNCTION();
     // The measu
     copyMatrix(x, z);
@@ -288,8 +277,8 @@ void MeasurementFunction(EKFMatrix *x, EKFMatrix *z, EKFState* ekf, void* userDa
 
 void StateJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)userData;
+    (void) x;
+    (void) userData;
     LOG_FUNCTION();
 
     for (int i = 0; i < J->row; ++i)
@@ -310,9 +299,9 @@ void StateJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* user
 
 void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) userData;
     LOG_FUNCTION();
 
     for (int i = 0; i < J->row; ++i)
@@ -334,9 +323,9 @@ void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void
 
 void MotionModelUpdateCallback(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double timeElasped, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) userData;
     LOG_FUNCTION();
     // The A matrix is the same as the A matrix in the TransitionFunction.
     // Fill in the A matrix with the delta time and state.
@@ -350,7 +339,7 @@ void MotionModelUpdateCallback(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf
 }
 
 // We want to check all the variables in the EKFState struct to make sure they are not NaN.
-int nanCheckVariable(EKFState *ekf)
+int nanCheckVariable(EKFState* ekf)
 {
     // Check the x matrix.
     if (nanCheckMatrix(ekf->x) != 0)

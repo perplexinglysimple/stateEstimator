@@ -141,8 +141,8 @@ int main()
 
 static void NonlinearTransition(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     double x0 = ACCESS_MATRIX(*x, 0, 0);
     double x1 = ACCESS_MATRIX(*x, 1, 0);
     double y0 = x0 + 0.1 * sin(x1);
@@ -161,8 +161,8 @@ static void NonlinearTransition(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, 
 
 static void NonlinearMeasurement(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     double x0 = ACCESS_MATRIX(*x, 0, 0);
     double x1 = ACCESS_MATRIX(*x, 1, 0);
     double z0 = x0 * x0;
@@ -181,10 +181,10 @@ static void NonlinearMeasurement(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void
 
 static void IdentityUpdateA(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double time, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)time;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) time;
+    (void) userData;
     if (A->jaggedAlloc)
     {
         A->mat[0][0] = 1;

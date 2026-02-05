@@ -9,11 +9,12 @@
 #include <stdio.h>
 
 // Single printf path avoids variadic dispatch issues across compilers.
-#define LOG_MSG_PRINTF(level, ...) \
-    do { \
-        printf("[%s:%d] %s: ", __FILENAME__, __LINE__, level); \
-        printf(__VA_ARGS__); \
-        printf("\n"); \
+#define LOG_MSG_PRINTF(level, ...)                                                                                     \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        printf("[%s:%d] %s: ", __FILENAME__, __LINE__, level);                                                         \
+        printf(__VA_ARGS__);                                                                                           \
+        printf("\n");                                                                                                  \
     } while (0)
 
 #ifndef __FILENAME__

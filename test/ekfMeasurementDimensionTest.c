@@ -72,10 +72,14 @@ int main()
         return -1;
     }
 
-    if (assertNear(ACCESS_MATRIX(*(ekf.x), 0, 0), 0.9090909, 1e-4, "x0 update") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf.x), 1, 0), 0.0, 1e-6, "x1 update") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf.P), 0, 0), 0.0909091, 1e-4, "P00 update") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf.P), 1, 1), 1.0, 1e-6, "P11 update") != 0) return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf.x), 0, 0), 0.9090909, 1e-4, "x0 update") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf.x), 1, 0), 0.0, 1e-6, "x1 update") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf.P), 0, 0), 0.0909091, 1e-4, "P00 update") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf.P), 1, 1), 1.0, 1e-6, "P11 update") != 0)
+        return -1;
 
     if (EKFCleanup(&ekf) != EKF_SUCCESS)
     {
@@ -88,14 +92,14 @@ int main()
 
 static void TransitionIdentity(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void* userData)
 {
-    (void)userData;
+    (void) userData;
     multMatrix(ekf->A, x, x_pred);
 }
 
 static void MeasurementX(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     if (z->jaggedAlloc)
     {
         z->mat[0][0] = ACCESS_MATRIX(*x, 0, 0);
@@ -108,8 +112,8 @@ static void MeasurementX(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userDa
 
 static void StateJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)userData;
+    (void) x;
+    (void) userData;
     for (int i = 0; i < J->row; ++i)
     {
         for (int j = 0; j < J->col; ++j)
@@ -128,9 +132,9 @@ static void StateJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, voi
 
 static void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) userData;
     if (J->jaggedAlloc)
     {
         J->mat[0][0] = 1.0;
@@ -145,10 +149,10 @@ static void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ek
 
 static void UpdateAMatrix(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double time, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)time;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) time;
+    (void) userData;
     if (A->jaggedAlloc)
     {
         A->mat[0][0] = 1.0;

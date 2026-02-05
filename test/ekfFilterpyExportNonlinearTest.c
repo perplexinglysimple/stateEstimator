@@ -61,20 +61,18 @@ int main(int argc, char** argv)
     STATIC_MATRIX_DIRECTIVE(measurement.z, 2, 1, z);
 
     // Deterministic measurements (z = [pos, vel]) for nonlinear compare
-    ekfType measurements[10][2] = {
-        {0.00, 1.00},
-        {0.05, 0.98},
-        {0.10, 0.97},
-        {0.16, 0.95},
-        {0.21, 0.94},
-        {0.27, 0.92},
-        {0.33, 0.90},
-        {0.39, 0.89},
-        {0.46, 0.87},
-        {0.52, 0.86}
-    };
+    ekfType measurements[10][2] = {{0.00, 1.00}, {0.05, 0.98}, {0.10, 0.97}, {0.16, 0.95}, {0.21, 0.94},
+                                   {0.27, 0.92}, {0.33, 0.90}, {0.39, 0.89}, {0.46, 0.87}, {0.52, 0.86}};
 
-    FILE* f = fopen(outPath, "w");
+    FILE* f = NULL;
+#ifdef _WIN32
+    if (fopen_s(&f, outPath, "w") != 0)
+    {
+        f = NULL;
+    }
+#else
+    f = fopen(outPath, "w");
+#endif
     if (!f)
     {
         LOG_ERROR("Failed to open output file for writing.");
@@ -99,14 +97,9 @@ int main(int argc, char** argv)
             return -1;
         }
 
-        fprintf(f, "%d,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f\n",
-                k,
-                ACCESS_MATRIX(*(ekf.x), 0, 0),
-                ACCESS_MATRIX(*(ekf.x), 1, 0),
-                ACCESS_MATRIX(*(ekf.P), 0, 0),
-                ACCESS_MATRIX(*(ekf.P), 0, 1),
-                ACCESS_MATRIX(*(ekf.P), 1, 0),
-                ACCESS_MATRIX(*(ekf.P), 1, 1));
+        fprintf(f, "%d,%.10f,%.10f,%.10f,%.10f,%.10f,%.10f\n", k, ACCESS_MATRIX(*(ekf.x), 0, 0),
+                ACCESS_MATRIX(*(ekf.x), 1, 0), ACCESS_MATRIX(*(ekf.P), 0, 0), ACCESS_MATRIX(*(ekf.P), 0, 1),
+                ACCESS_MATRIX(*(ekf.P), 1, 0), ACCESS_MATRIX(*(ekf.P), 1, 1));
     }
 
     fclose(f);
@@ -116,8 +109,8 @@ int main(int argc, char** argv)
 
 static void TransitionFunction(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     double dt = 0.1;
     double x0 = ACCESS_MATRIX(*x, 0, 0);
     double x1 = ACCESS_MATRIX(*x, 1, 0);
@@ -137,8 +130,8 @@ static void TransitionFunction(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, v
 
 static void MeasurementFunction(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     double x0 = ACCESS_MATRIX(*x, 0, 0);
     double x1 = ACCESS_MATRIX(*x, 1, 0);
     double z0 = x0 * x0;
@@ -157,8 +150,8 @@ static void MeasurementFunction(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void*
 
 static void StateJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     double dt = 0.1;
     double x0 = ACCESS_MATRIX(*x, 0, 0);
     double x1 = ACCESS_MATRIX(*x, 1, 0);
@@ -185,8 +178,8 @@ static void StateJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, voi
 
 static void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     double x0 = ACCESS_MATRIX(*x, 0, 0);
     double x1 = ACCESS_MATRIX(*x, 1, 0);
     double h00 = 2.0 * x0;
@@ -212,10 +205,10 @@ static void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ek
 
 static void UpdateAMatrix(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double time, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)time;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) time;
+    (void) userData;
     if (A->jaggedAlloc)
     {
         A->mat[0][0] = 1.0;

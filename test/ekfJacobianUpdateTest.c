@@ -192,21 +192,21 @@ int main()
 
 static void TransitionFunction(EKFMatrix* x, EKFMatrix* x_predicted, EKFState* ekf, void* userData)
 {
-    (void)userData;
+    (void) userData;
     multMatrix(ekf->A, x, x_predicted);
 }
 
 static void MeasurementFunction(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     copyMatrix(x, z);
 }
 
 static void StateJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)userData;
+    (void) x;
+    (void) userData;
     if (J->jaggedAlloc)
     {
         J->mat[0][0] = ACCESS_MATRIX(*(ekf->A), 0, 0);
@@ -219,9 +219,9 @@ static void StateJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, voi
 
 static void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) userData;
     if (J->jaggedAlloc)
     {
         J->mat[0][0] = 1;
@@ -234,10 +234,10 @@ static void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ek
 
 static void UpdateAMatrix(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double time, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)time;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) time;
+    (void) userData;
     if (A->jaggedAlloc)
     {
         A->mat[0][0] = 1;

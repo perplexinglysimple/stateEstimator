@@ -1,8 +1,8 @@
 /**
  * @file ekfMatrixMathTest.c
- * 
+ *
  * I know this may leak memory if malloc fails and all other things... Its a test. I might fix it I might not.
-*/
+ */
 
 #include "EKF.h"
 #include <math.h>
@@ -12,12 +12,14 @@
 #ifdef MATRIX_MATH_RETURN_CHECK
 #undef MATRIX_MATH_RETURN_CHECK
 #endif
-#define MATRIX_MATH_RETURN_CHECK(ret) \
-    do { \
-        matrixReturnCodes _ret = (ret); \
-        if (_ret != MATRIX_SUCCESS) { \
-            return _ret; \
-        } \
+#define MATRIX_MATH_RETURN_CHECK(ret)                                                                                  \
+    do                                                                                                                 \
+    {                                                                                                                  \
+        matrixReturnCodes _ret = (ret);                                                                                \
+        if (_ret != MATRIX_SUCCESS)                                                                                    \
+        {                                                                                                              \
+            return _ret;                                                                                               \
+        }                                                                                                              \
     } while (0)
 
 matrixReturnCodes copyTest(bool increasedLogging);
@@ -56,21 +58,22 @@ matrixReturnCodes nonsquareMultiplyTest(bool increasedLogging);
 matrixReturnCodes nanIdentityMinusATest(bool increasedLogging);
 matrixReturnCodes aliasingGuardTests(bool increasedLogging);
 
-typedef struct TestCase_ {
-    const char *name;
+typedef struct TestCase_
+{
+    const char* name;
     matrixReturnCodes (*fn)(bool increasedLogging);
 } TestCase;
 
-static bool isMatch(const char *target, const char *arg)
+static bool isMatch(const char* target, const char* arg)
 {
     return (arg != NULL) && (target != NULL) && (strcmp(target, arg) == 0);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     LOG_INFO("Starting Matrix Math Tests");
     bool increasedLogging = true;
-    const char *filter = NULL;
+    const char* filter = NULL;
     if (argc > 1)
     {
         filter = argv[1];
@@ -114,7 +117,7 @@ int main(int argc, char **argv)
         {"aliasing_guards", aliasingGuardTests},
     };
 
-    int testCount = (int)(sizeof(tests) / sizeof(tests[0]));
+    int testCount = (int) (sizeof(tests) / sizeof(tests[0]));
     for (int i = 0; i < testCount; ++i)
     {
         if (filter == NULL || isMatch(tests[i].name, filter))
@@ -129,9 +132,9 @@ int main(int argc, char **argv)
 
 matrixReturnCodes tranposeTest(bool increasedLogging)
 {
-    struct matrix *tTest = NULL;
-    struct matrix *correctResult = NULL;
-    struct matrix *result = NULL;
+    struct matrix* tTest = NULL;
+    struct matrix* correctResult = NULL;
+    struct matrix* result = NULL;
 
     INIT_MATRIX(tTest, 2, 2);
     INIT_MATRIX(correctResult, 2, 2);
@@ -169,9 +172,9 @@ matrixReturnCodes tranposeTest(bool increasedLogging)
 
 matrixReturnCodes scaleTest(bool increasedLogging)
 {
-    struct matrix *sTest = NULL;
-    struct matrix *correctResult = NULL;
-    struct matrix *result = NULL;
+    struct matrix* sTest = NULL;
+    struct matrix* correctResult = NULL;
+    struct matrix* result = NULL;
 
     INIT_MATRIX(sTest, 2, 2);
     INIT_MATRIX(correctResult, 2, 2);
@@ -209,9 +212,9 @@ matrixReturnCodes scaleTest(bool increasedLogging)
 
 matrixReturnCodes idenityMatrixMinusATest(bool increasedLogging)
 {
-    struct matrix *iTest = NULL;
-    struct matrix *correctResult = NULL;
-    struct matrix *result = NULL;
+    struct matrix* iTest = NULL;
+    struct matrix* correctResult = NULL;
+    struct matrix* result = NULL;
 
     INIT_MATRIX(iTest, 2, 2);
     INIT_MATRIX(correctResult, 2, 2);
@@ -250,11 +253,11 @@ matrixReturnCodes idenityMatrixMinusATest(bool increasedLogging)
 
 matrixReturnCodes multiplicationTest(bool increasedLogging)
 {
-    struct matrix *multTest = NULL;
-    struct matrix *multTest2 = NULL;
+    struct matrix* multTest = NULL;
+    struct matrix* multTest2 = NULL;
 
-    struct matrix *result = NULL;
-    struct matrix *correctResult = NULL;
+    struct matrix* result = NULL;
+    struct matrix* correctResult = NULL;
 
     INIT_MATRIX(multTest, 2, 2);
     INIT_MATRIX(multTest2, 2, 2);
@@ -278,7 +281,7 @@ matrixReturnCodes multiplicationTest(bool increasedLogging)
 
     MATRIX_MATH_RETURN_CHECK(multMatrix(multTest, multTest2, result));
 
-    if(increasedLogging)
+    if (increasedLogging)
     {
         LOG_INFO("Matrix 1");
         printMatrix(multTest);
@@ -302,10 +305,10 @@ matrixReturnCodes multiplicationTest(bool increasedLogging)
 
 matrixReturnCodes subtractionTest(bool increasedLogging)
 {
-    struct matrix *subTest = NULL;
-    struct matrix *subTest2 = NULL;
-    struct matrix *result = NULL;
-    struct matrix *correctResult = NULL;
+    struct matrix* subTest = NULL;
+    struct matrix* subTest2 = NULL;
+    struct matrix* result = NULL;
+    struct matrix* correctResult = NULL;
 
     INIT_MATRIX(subTest, 2, 2);
     INIT_MATRIX(subTest2, 2, 2);
@@ -353,10 +356,10 @@ matrixReturnCodes subtractionTest(bool increasedLogging)
 
 matrixReturnCodes additionTest(bool increasedLogging)
 {
-    struct matrix *addTest = NULL;
-    struct matrix *addTest2 = NULL;
-    struct matrix *correctResult = NULL;
-    struct matrix *result = NULL;
+    struct matrix* addTest = NULL;
+    struct matrix* addTest2 = NULL;
+    struct matrix* correctResult = NULL;
+    struct matrix* result = NULL;
 
     INIT_MATRIX(addTest, 2, 2);
     INIT_MATRIX(addTest2, 2, 2);
@@ -406,9 +409,9 @@ matrixReturnCodes additionTest(bool increasedLogging)
 
 matrixReturnCodes inverseTest(bool increasedLogging)
 {
-    struct matrix *invTest = NULL;
-    struct matrix *invTest2 = NULL;
-    struct matrix *correctResult = NULL;
+    struct matrix* invTest = NULL;
+    struct matrix* invTest2 = NULL;
+    struct matrix* correctResult = NULL;
 
     INIT_MATRIX(invTest, 2, 2);
     INIT_MATRIX(invTest2, 2, 2);
@@ -449,9 +452,9 @@ matrixReturnCodes inverseTest(bool increasedLogging)
 
 matrixReturnCodes inverseTest3x3(bool increasedLogging)
 {
-    struct matrix *invTest = NULL;
-    struct matrix *result = NULL;
-    struct matrix *correctResult = NULL;
+    struct matrix* invTest = NULL;
+    struct matrix* result = NULL;
+    struct matrix* correctResult = NULL;
 
     INIT_MATRIX(invTest, 3, 3);
     INIT_MATRIX(result, 3, 3);
@@ -498,14 +501,13 @@ matrixReturnCodes inverseTest3x3(bool increasedLogging)
     LOG_INFO("Completed Inverse 3x3 Test");
 
     return MATRIX_SUCCESS;
-
 }
 
 matrixReturnCodes inverseTest4x4(bool increasedLogging)
 {
-    struct matrix *invTest = NULL;
-    struct matrix *result = NULL;
-    struct matrix *correctResult = NULL;
+    struct matrix* invTest = NULL;
+    struct matrix* result = NULL;
+    struct matrix* correctResult = NULL;
 
     INIT_MATRIX(invTest, 4, 4);
     INIT_MATRIX(result, 4, 4);
@@ -570,9 +572,9 @@ matrixReturnCodes inverseTest4x4(bool increasedLogging)
 
 matrixReturnCodes inverseTest5x5(bool increasedLogging)
 {
-    struct matrix *invTest = NULL;
-    struct matrix *result = NULL;
-    struct matrix *correctResult = NULL;
+    struct matrix* invTest = NULL;
+    struct matrix* result = NULL;
+    struct matrix* correctResult = NULL;
 
     INIT_MATRIX(invTest, 5, 5);
     INIT_MATRIX(result, 5, 5);
@@ -655,9 +657,9 @@ matrixReturnCodes inverseTest5x5(bool increasedLogging)
 
 matrixReturnCodes inverseTest6x6(bool increasedLogging)
 {
-    struct matrix *invTest = NULL;
-    struct matrix *result = NULL;
-    struct matrix *correctResult = NULL;
+    struct matrix* invTest = NULL;
+    struct matrix* result = NULL;
+    struct matrix* correctResult = NULL;
 
     INIT_MATRIX(invTest, 6, 6);
     INIT_MATRIX(result, 6, 6);
@@ -700,7 +702,7 @@ matrixReturnCodes inverseTest6x6(bool increasedLogging)
     invTest->mat[5][3] = 0;
     invTest->mat[5][4] = 0;
     invTest->mat[5][5] = 1;
-    
+
     correctResult->mat[0][0] = 1;
     correctResult->mat[0][1] = -2;
     correctResult->mat[0][2] = 1;
@@ -762,14 +764,14 @@ matrixReturnCodes inverseTest6x6(bool increasedLogging)
 
 matrixReturnCodes copyTest(bool increasedLogging)
 {
-    struct matrix *copy1 = NULL;
-    struct matrix *copy2 = NULL;
-    struct matrix *correctResult = NULL;
+    struct matrix* copy1 = NULL;
+    struct matrix* copy2 = NULL;
+    struct matrix* correctResult = NULL;
     INIT_MATRIX(copy1, 2, 2);
     INIT_MATRIX(copy2, 2, 2);
     INIT_MATRIX(correctResult, 2, 2);
 
-    //Copy test
+    // Copy test
     LOG_INFO("Starting Copy Test");
     copy1->mat[0][0] = 1;
     correctResult->mat[0][0] = 1;
@@ -801,7 +803,7 @@ matrixReturnCodes copyTest(bool increasedLogging)
     return MATRIX_SUCCESS;
 }
 
-static matrixReturnCodes expectReturnCode(matrixReturnCodes got, matrixReturnCodes expected, const char *testName)
+static matrixReturnCodes expectReturnCode(matrixReturnCodes got, matrixReturnCodes expected, const char* testName)
 {
     if (got != expected)
     {
@@ -811,7 +813,7 @@ static matrixReturnCodes expectReturnCode(matrixReturnCodes got, matrixReturnCod
     return MATRIX_SUCCESS;
 }
 
-static matrixReturnCodes compareMatrixApprox(struct matrix *a, struct matrix *b, matrixType eps)
+static matrixReturnCodes compareMatrixApprox(struct matrix* a, struct matrix* b, matrixType eps)
 {
     if (a == NULL || b == NULL)
     {
@@ -837,12 +839,12 @@ static matrixReturnCodes compareMatrixApprox(struct matrix *a, struct matrix *b,
 
 matrixReturnCodes dimensionMismatchTests(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Dimension Mismatch Tests");
 
-    struct matrix *a = NULL;
-    struct matrix *b = NULL;
-    struct matrix *res = NULL;
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
 
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(b, 3, 3);
@@ -866,20 +868,24 @@ matrixReturnCodes dimensionMismatchTests(bool increasedLogging)
 
     INIT_MATRIX(a, 2, 3);
     INIT_MATRIX(res, 2, 2);
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(transposeMatrix(a, res), MATRIX_DIMENSION_MISMATCH, "transposeMatrix mismatch"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(transposeMatrix(a, res), MATRIX_DIMENSION_MISMATCH, "transposeMatrix mismatch"));
     FREE_MATRIX(a);
     FREE_MATRIX(res);
 
     INIT_MATRIX(a, 2, 3);
     INIT_MATRIX(res, 2, 2);
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(scaleMatrix(a, res, 2), MATRIX_DIMENSION_MISMATCH, "scaleMatrix mismatch"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(scaleMatrix(a, res, 2), MATRIX_DIMENSION_MISMATCH, "scaleMatrix mismatch"));
     FREE_MATRIX(a);
     FREE_MATRIX(res);
 
     INIT_MATRIX(a, 2, 3);
     INIT_MATRIX(res, 2, 3);
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrix(a, res), MATRIX_DIMENSION_MISMATCH, "inverseMatrix non-square"));
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(identityMatrixMinusA(a, res), MATRIX_DIMENSION_MISMATCH, "identityMatrixMinusA non-square"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(inverseMatrix(a, res), MATRIX_DIMENSION_MISMATCH, "inverseMatrix non-square"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(identityMatrixMinusA(a, res), MATRIX_DIMENSION_MISMATCH, "identityMatrixMinusA non-square"));
     FREE_MATRIX(a);
     FREE_MATRIX(res);
 
@@ -889,10 +895,10 @@ matrixReturnCodes dimensionMismatchTests(bool increasedLogging)
 
 matrixReturnCodes nanAndInfTests(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting NaN/Inf Tests");
 
-    struct matrix *a = NULL;
+    struct matrix* a = NULL;
     INIT_MATRIX(a, 2, 2);
 
     a->mat[0][0] = NAN;
@@ -909,13 +915,13 @@ matrixReturnCodes nanAndInfTests(bool increasedLogging)
 
 matrixReturnCodes staticMatrixAddTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Static Matrix Add Test");
 
-    struct matrix *a = NULL;
-    struct matrix *b = NULL;
-    struct matrix *res = NULL;
-    struct matrix *correct = NULL;
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
+    struct matrix* correct = NULL;
 
     STATIC_MATRIX_DIRECTIVE(a, 2, 2, a);
     STATIC_MATRIX_DIRECTIVE(b, 2, 2, b);
@@ -946,13 +952,13 @@ matrixReturnCodes staticMatrixAddTest(bool increasedLogging)
 
 matrixReturnCodes staticMatrixMultTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Static Matrix Mult Test");
 
-    struct matrix *a = NULL;
-    struct matrix *b = NULL;
-    struct matrix *res = NULL;
-    struct matrix *correct = NULL;
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
+    struct matrix* correct = NULL;
 
     STATIC_MATRIX_DIRECTIVE(a, 2, 2, a);
     STATIC_MATRIX_DIRECTIVE(b, 2, 2, b);
@@ -983,12 +989,12 @@ matrixReturnCodes staticMatrixMultTest(bool increasedLogging)
 
 matrixReturnCodes staticMatrixTransposeTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Static Matrix Transpose Test");
 
-    struct matrix *a = NULL;
-    struct matrix *res = NULL;
-    struct matrix *correct = NULL;
+    struct matrix* a = NULL;
+    struct matrix* res = NULL;
+    struct matrix* correct = NULL;
 
     STATIC_MATRIX_DIRECTIVE(a, 2, 3, a);
     STATIC_MATRIX_DIRECTIVE(res, 3, 2, res);
@@ -1017,12 +1023,12 @@ matrixReturnCodes staticMatrixTransposeTest(bool increasedLogging)
 
 matrixReturnCodes staticMatrixScaleTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Static Matrix Scale Test");
 
-    struct matrix *a = NULL;
-    struct matrix *res = NULL;
-    struct matrix *correct = NULL;
+    struct matrix* a = NULL;
+    struct matrix* res = NULL;
+    struct matrix* correct = NULL;
 
     STATIC_MATRIX_DIRECTIVE(a, 2, 2, a);
     STATIC_MATRIX_DIRECTIVE(res, 2, 2, res);
@@ -1047,12 +1053,12 @@ matrixReturnCodes staticMatrixScaleTest(bool increasedLogging)
 
 matrixReturnCodes staticMatrixIdentityMinusATest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Static Matrix I - A Test");
 
-    struct matrix *a = NULL;
-    struct matrix *res = NULL;
-    struct matrix *correct = NULL;
+    struct matrix* a = NULL;
+    struct matrix* res = NULL;
+    struct matrix* correct = NULL;
 
     STATIC_MATRIX_DIRECTIVE(a, 2, 2, a);
     STATIC_MATRIX_DIRECTIVE(res, 2, 2, res);
@@ -1077,15 +1083,16 @@ matrixReturnCodes staticMatrixIdentityMinusATest(bool increasedLogging)
 
 matrixReturnCodes compareDimensionMismatchTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Compare Dimension Mismatch Test");
 
-    struct matrix *a = NULL;
-    struct matrix *b = NULL;
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(b, 2, 3);
 
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(compareMatrieces(a, b), MATRIX_DIMENSION_MISMATCH, "compareMatrieces mismatch"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(compareMatrieces(a, b), MATRIX_DIMENSION_MISMATCH, "compareMatrieces mismatch"));
 
     FREE_MATRIX(a);
     FREE_MATRIX(b);
@@ -1096,12 +1103,12 @@ matrixReturnCodes compareDimensionMismatchTest(bool increasedLogging)
 
 matrixReturnCodes copy2DArrayTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting 2D Array Copy Test");
 
     ekfType data[2][3] = {{1, 2, 3}, {4, 5, 6}};
 
-    struct matrix *m = NULL;
+    struct matrix* m = NULL;
     INIT_MATRIX(m, 2, 3);
     COPY_2DARRAY_TO_MATRIX(data, m);
 
@@ -1113,7 +1120,7 @@ matrixReturnCodes copy2DArrayTest(bool increasedLogging)
         return MATRIX_ERROR;
     }
 
-    struct matrix *s = NULL;
+    struct matrix* s = NULL;
     STATIC_MATRIX_DIRECTIVE(s, 2, 3, s);
     COPY_2DARRAY_TO_MATRIX(data, s);
 
@@ -1132,12 +1139,12 @@ matrixReturnCodes copy2DArrayTest(bool increasedLogging)
 
 matrixReturnCodes multMatrixZeroingTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Mult Matrix Zeroing Test");
 
-    struct matrix *a = NULL;
-    struct matrix *b = NULL;
-    struct matrix *res = NULL;
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
 
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(b, 2, 2);
@@ -1179,11 +1186,11 @@ matrixReturnCodes multMatrixZeroingTest(bool increasedLogging)
 
 matrixReturnCodes inverseSingularTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Singular Inverse Test");
 
-    struct matrix *a = NULL;
-    struct matrix *res = NULL;
+    struct matrix* a = NULL;
+    struct matrix* res = NULL;
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(res, 2, 2);
 
@@ -1210,13 +1217,13 @@ matrixReturnCodes inverseSingularTest(bool increasedLogging)
 
 matrixReturnCodes inverseJitterTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Inverse Jitter Test");
 
-    struct matrix *a = NULL;
-    struct matrix *inv = NULL;
-    struct matrix *res = NULL;
-    struct matrix *identity = NULL;
+    struct matrix* a = NULL;
+    struct matrix* inv = NULL;
+    struct matrix* res = NULL;
+    struct matrix* identity = NULL;
 
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(inv, 2, 2);
@@ -1233,11 +1240,11 @@ matrixReturnCodes inverseJitterTest(bool increasedLogging)
     identity->mat[1][0] = 0;
     identity->mat[1][1] = 1;
 
-    MATRIX_MATH_RETURN_CHECK(inverseMatrixWithJitter(a, inv, (matrixType)1e-6, 3, (matrixType)100));
+    MATRIX_MATH_RETURN_CHECK(inverseMatrixWithJitter(a, inv, (matrixType) 1e-6, 3, (matrixType) 100));
     MATRIX_MATH_RETURN_CHECK(multMatrix(a, inv, res));
     MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(res, identity, 1e-3));
 
-    if (a->mat[0][0] < (matrixType)(1 + 1e-6) || a->mat[1][1] < (matrixType)(1 + 1e-6))
+    if (a->mat[0][0] < (matrixType) (1 + 1e-6) || a->mat[1][1] < (matrixType) (1 + 1e-6))
     {
         LOG_ERROR("inverseMatrixWithJitter did not add jitter to the diagonal.");
         FREE_MATRIX(a);
@@ -1258,12 +1265,12 @@ matrixReturnCodes inverseJitterTest(bool increasedLogging)
 
 matrixReturnCodes nanPropagationTests(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting NaN Propagation Tests");
 
-    struct matrix *a = NULL;
-    struct matrix *b = NULL;
-    struct matrix *res = NULL;
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
 
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(b, 2, 2);
@@ -1276,7 +1283,8 @@ matrixReturnCodes nanPropagationTests(bool increasedLogging)
     MATRIX_MATH_RETURN_CHECK(expectReturnCode(subMatrix(a, b, res), MATRIX_NAN_FAILURE, "subMatrix NaN input"));
     MATRIX_MATH_RETURN_CHECK(expectReturnCode(multMatrix(a, b, res), MATRIX_NAN_FAILURE, "multMatrix NaN input"));
     MATRIX_MATH_RETURN_CHECK(expectReturnCode(scaleMatrix(a, res, 2), MATRIX_NAN_FAILURE, "scaleMatrix NaN input"));
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(transposeMatrix(a, res), MATRIX_NAN_FAILURE, "transposeMatrix NaN input"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(transposeMatrix(a, res), MATRIX_NAN_FAILURE, "transposeMatrix NaN input"));
 
     FREE_MATRIX(a);
     FREE_MATRIX(b);
@@ -1288,22 +1296,28 @@ matrixReturnCodes nanPropagationTests(bool increasedLogging)
 
 matrixReturnCodes identityPropertiesTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Identity Properties Test");
 
-    struct matrix *a = NULL;
-    struct matrix *i = NULL;
-    struct matrix *res = NULL;
-    struct matrix *correct = NULL;
+    struct matrix* a = NULL;
+    struct matrix* i = NULL;
+    struct matrix* res = NULL;
+    struct matrix* correct = NULL;
 
     INIT_MATRIX(a, 3, 3);
     INIT_MATRIX(i, 3, 3);
     INIT_MATRIX(res, 3, 3);
     INIT_MATRIX(correct, 3, 3);
 
-    a->mat[0][0] = 1; a->mat[0][1] = 2; a->mat[0][2] = 3;
-    a->mat[1][0] = 4; a->mat[1][1] = 5; a->mat[1][2] = 6;
-    a->mat[2][0] = 7; a->mat[2][1] = 8; a->mat[2][2] = 9;
+    a->mat[0][0] = 1;
+    a->mat[0][1] = 2;
+    a->mat[0][2] = 3;
+    a->mat[1][0] = 4;
+    a->mat[1][1] = 5;
+    a->mat[1][2] = 6;
+    a->mat[2][0] = 7;
+    a->mat[2][1] = 8;
+    a->mat[2][2] = 9;
 
     for (int irow = 0; irow < 3; ++irow)
     {
@@ -1331,22 +1345,34 @@ matrixReturnCodes identityPropertiesTest(bool increasedLogging)
 
 matrixReturnCodes setIdentityMatrixTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Set Identity Matrix Test");
 
-    struct matrix *a = NULL;
-    struct matrix *expected = NULL;
+    struct matrix* a = NULL;
+    struct matrix* expected = NULL;
 
     INIT_MATRIX(a, 3, 3);
     INIT_MATRIX(expected, 3, 3);
 
-    a->mat[0][0] = 1; a->mat[0][1] = 2; a->mat[0][2] = 3;
-    a->mat[1][0] = 4; a->mat[1][1] = 5; a->mat[1][2] = 6;
-    a->mat[2][0] = 7; a->mat[2][1] = 8; a->mat[2][2] = 9;
+    a->mat[0][0] = 1;
+    a->mat[0][1] = 2;
+    a->mat[0][2] = 3;
+    a->mat[1][0] = 4;
+    a->mat[1][1] = 5;
+    a->mat[1][2] = 6;
+    a->mat[2][0] = 7;
+    a->mat[2][1] = 8;
+    a->mat[2][2] = 9;
 
-    expected->mat[0][0] = 1; expected->mat[0][1] = 0; expected->mat[0][2] = 0;
-    expected->mat[1][0] = 0; expected->mat[1][1] = 1; expected->mat[1][2] = 0;
-    expected->mat[2][0] = 0; expected->mat[2][1] = 0; expected->mat[2][2] = 1;
+    expected->mat[0][0] = 1;
+    expected->mat[0][1] = 0;
+    expected->mat[0][2] = 0;
+    expected->mat[1][0] = 0;
+    expected->mat[1][1] = 1;
+    expected->mat[1][2] = 0;
+    expected->mat[2][0] = 0;
+    expected->mat[2][1] = 0;
+    expected->mat[2][2] = 1;
 
     MATRIX_MATH_RETURN_CHECK(setIdentityMatrix(a));
     MATRIX_MATH_RETURN_CHECK(compareMatrieces(a, expected));
@@ -1360,19 +1386,23 @@ matrixReturnCodes setIdentityMatrixTest(bool increasedLogging)
 
 matrixReturnCodes transposeTwiceTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Transpose Twice Test");
 
-    struct matrix *a = NULL;
-    struct matrix *t1 = NULL;
-    struct matrix *t2 = NULL;
+    struct matrix* a = NULL;
+    struct matrix* t1 = NULL;
+    struct matrix* t2 = NULL;
 
     INIT_MATRIX(a, 2, 3);
     INIT_MATRIX(t1, 3, 2);
     INIT_MATRIX(t2, 2, 3);
 
-    a->mat[0][0] = 1; a->mat[0][1] = 2; a->mat[0][2] = 3;
-    a->mat[1][0] = 4; a->mat[1][1] = 5; a->mat[1][2] = 6;
+    a->mat[0][0] = 1;
+    a->mat[0][1] = 2;
+    a->mat[0][2] = 3;
+    a->mat[1][0] = 4;
+    a->mat[1][1] = 5;
+    a->mat[1][2] = 6;
 
     MATRIX_MATH_RETURN_CHECK(transposeMatrix(a, t1));
     MATRIX_MATH_RETURN_CHECK(transposeMatrix(t1, t2));
@@ -1388,19 +1418,21 @@ matrixReturnCodes transposeTwiceTest(bool increasedLogging)
 
 matrixReturnCodes scaleIdentityZeroTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Scale Identity/Zero Test");
 
-    struct matrix *a = NULL;
-    struct matrix *res = NULL;
-    struct matrix *correct = NULL;
+    struct matrix* a = NULL;
+    struct matrix* res = NULL;
+    struct matrix* correct = NULL;
 
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(res, 2, 2);
     INIT_MATRIX(correct, 2, 2);
 
-    a->mat[0][0] = 1; a->mat[0][1] = -2;
-    a->mat[1][0] = 3; a->mat[1][1] = 4;
+    a->mat[0][0] = 1;
+    a->mat[0][1] = -2;
+    a->mat[1][0] = 3;
+    a->mat[1][1] = 4;
 
     MATRIX_MATH_RETURN_CHECK(scaleMatrix(a, res, 1));
     MATRIX_MATH_RETURN_CHECK(copyMatrix(a, correct));
@@ -1426,24 +1458,28 @@ matrixReturnCodes scaleIdentityZeroTest(bool increasedLogging)
 
 matrixReturnCodes inverseSanityTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Inverse Sanity Test");
 
-    struct matrix *a = NULL;
-    struct matrix *inv = NULL;
-    struct matrix *res = NULL;
-    struct matrix *identity = NULL;
+    struct matrix* a = NULL;
+    struct matrix* inv = NULL;
+    struct matrix* res = NULL;
+    struct matrix* identity = NULL;
 
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(inv, 2, 2);
     INIT_MATRIX(res, 2, 2);
     INIT_MATRIX(identity, 2, 2);
 
-    a->mat[0][0] = 4; a->mat[0][1] = 7;
-    a->mat[1][0] = 2; a->mat[1][1] = 6;
+    a->mat[0][0] = 4;
+    a->mat[0][1] = 7;
+    a->mat[1][0] = 2;
+    a->mat[1][1] = 6;
 
-    identity->mat[0][0] = 1; identity->mat[0][1] = 0;
-    identity->mat[1][0] = 0; identity->mat[1][1] = 1;
+    identity->mat[0][0] = 1;
+    identity->mat[0][1] = 0;
+    identity->mat[1][0] = 0;
+    identity->mat[1][1] = 1;
 
     MATRIX_MATH_RETURN_CHECK(inverseMatrix(a, inv));
     MATRIX_MATH_RETURN_CHECK(multMatrix(a, inv, res));
@@ -1460,19 +1496,21 @@ matrixReturnCodes inverseSanityTest(bool increasedLogging)
 
 matrixReturnCodes inverseDoesNotMutateTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Inverse Non-Mutate Test");
 
-    struct matrix *a = NULL;
-    struct matrix *orig = NULL;
-    struct matrix *inv = NULL;
+    struct matrix* a = NULL;
+    struct matrix* orig = NULL;
+    struct matrix* inv = NULL;
 
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(orig, 2, 2);
     INIT_MATRIX(inv, 2, 2);
 
-    a->mat[0][0] = 1; a->mat[0][1] = 2;
-    a->mat[1][0] = 3; a->mat[1][1] = 4;
+    a->mat[0][0] = 1;
+    a->mat[0][1] = 2;
+    a->mat[1][0] = 3;
+    a->mat[1][1] = 4;
 
     MATRIX_MATH_RETURN_CHECK(copyMatrix(a, orig));
     MATRIX_MATH_RETURN_CHECK(inverseMatrix(a, inv));
@@ -1488,21 +1526,25 @@ matrixReturnCodes inverseDoesNotMutateTest(bool increasedLogging)
 
 matrixReturnCodes jaggedStaticParityTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Jagged vs Static Parity Test");
 
-    struct matrix *j = NULL;
-    struct matrix *jres = NULL;
-    struct matrix *s = NULL;
-    struct matrix *sres = NULL;
+    struct matrix* j = NULL;
+    struct matrix* jres = NULL;
+    struct matrix* s = NULL;
+    struct matrix* sres = NULL;
 
     INIT_MATRIX(j, 2, 3);
     INIT_MATRIX(jres, 3, 2);
     STATIC_MATRIX_DIRECTIVE(s, 2, 3, s);
     STATIC_MATRIX_DIRECTIVE(sres, 3, 2, sres);
 
-    j->mat[0][0] = 1; j->mat[0][1] = 2; j->mat[0][2] = 3;
-    j->mat[1][0] = 4; j->mat[1][1] = 5; j->mat[1][2] = 6;
+    j->mat[0][0] = 1;
+    j->mat[0][1] = 2;
+    j->mat[0][2] = 3;
+    j->mat[1][0] = 4;
+    j->mat[1][1] = 5;
+    j->mat[1][2] = 6;
 
     ekfType data[2][3] = {{1, 2, 3}, {4, 5, 6}};
     COPY_2DARRAY_TO_MATRIX(data, s);
@@ -1521,25 +1563,32 @@ matrixReturnCodes jaggedStaticParityTest(bool increasedLogging)
 
 matrixReturnCodes nonsquareMultiplyTest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Non-square Multiply Test");
 
-    struct matrix *a = NULL;
-    struct matrix *b = NULL;
-    struct matrix *res = NULL;
-    struct matrix *correct = NULL;
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
+    struct matrix* correct = NULL;
 
     INIT_MATRIX(a, 2, 3);
     INIT_MATRIX(b, 3, 2);
     INIT_MATRIX(res, 2, 2);
     INIT_MATRIX(correct, 2, 2);
 
-    a->mat[0][0] = 1; a->mat[0][1] = 2; a->mat[0][2] = 3;
-    a->mat[1][0] = 4; a->mat[1][1] = 5; a->mat[1][2] = 6;
+    a->mat[0][0] = 1;
+    a->mat[0][1] = 2;
+    a->mat[0][2] = 3;
+    a->mat[1][0] = 4;
+    a->mat[1][1] = 5;
+    a->mat[1][2] = 6;
 
-    b->mat[0][0] = 7;  b->mat[0][1] = 8;
-    b->mat[1][0] = 9;  b->mat[1][1] = 10;
-    b->mat[2][0] = 11; b->mat[2][1] = 12;
+    b->mat[0][0] = 7;
+    b->mat[0][1] = 8;
+    b->mat[1][0] = 9;
+    b->mat[1][1] = 10;
+    b->mat[2][0] = 11;
+    b->mat[2][1] = 12;
 
     correct->mat[0][0] = 58;
     correct->mat[0][1] = 64;
@@ -1560,16 +1609,17 @@ matrixReturnCodes nonsquareMultiplyTest(bool increasedLogging)
 
 matrixReturnCodes nanIdentityMinusATest(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting NaN IdentityMinusA Test");
 
-    struct matrix *a = NULL;
-    struct matrix *res = NULL;
+    struct matrix* a = NULL;
+    struct matrix* res = NULL;
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(res, 2, 2);
 
     a->mat[0][0] = NAN;
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(identityMatrixMinusA(a, res), MATRIX_NAN_FAILURE, "identityMatrixMinusA NaN input"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(identityMatrixMinusA(a, res), MATRIX_NAN_FAILURE, "identityMatrixMinusA NaN input"));
 
     FREE_MATRIX(a);
     FREE_MATRIX(res);
@@ -1580,12 +1630,12 @@ matrixReturnCodes nanIdentityMinusATest(bool increasedLogging)
 
 matrixReturnCodes aliasingGuardTests(bool increasedLogging)
 {
-    (void)increasedLogging;
+    (void) increasedLogging;
     LOG_INFO("Starting Aliasing Guard Tests");
 
-    struct matrix *a = NULL;
-    struct matrix *b = NULL;
-    struct matrix *res = NULL;
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
 
     INIT_MATRIX(a, 2, 2);
     INIT_MATRIX(b, 2, 2);
@@ -1610,10 +1660,12 @@ matrixReturnCodes aliasingGuardTests(bool increasedLogging)
     MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrix(a, a), MATRIX_ERROR, "inverseMatrix alias a"));
 
     // inverseMatrixWithJitter: res must not alias a
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrixWithJitter(a, a, (matrixType)1e-6, 3, (matrixType)100), MATRIX_ERROR, "inverseMatrixWithJitter alias a"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrixWithJitter(a, a, (matrixType) 1e-6, 3, (matrixType) 100),
+                                              MATRIX_ERROR, "inverseMatrixWithJitter alias a"));
 
     // identityMatrixMinusA: res must not alias a
-    MATRIX_MATH_RETURN_CHECK(expectReturnCode(identityMatrixMinusA(a, a), MATRIX_ERROR, "identityMatrixMinusA alias a"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(identityMatrixMinusA(a, a), MATRIX_ERROR, "identityMatrixMinusA alias a"));
 
     // copyMatrix: res must not alias a
     MATRIX_MATH_RETURN_CHECK(expectReturnCode(copyMatrix(a, a), MATRIX_ERROR, "copyMatrix alias a"));

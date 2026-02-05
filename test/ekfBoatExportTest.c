@@ -3,11 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef struct BoatInputs_ {
+typedef struct BoatInputs_
+{
     double gyro_x;
     double gyro_y;
     double gyro_z;
-    double motor_power; // 0..1
+    double motor_power;  // 0..1
     double rudder_angle; // radians
 } BoatInputs;
 
@@ -21,11 +22,9 @@ static void nedToEcef(double lat_rad, double lon_rad, double n, double e, double
 static int wmmLoadModel(const char* path);
 static int wmmFieldNED(double lat_rad, double lon_rad, double alt_m, double* n, double* e, double* d);
 static void quatNormalize(double* qw, double* qx, double* qy, double* qz);
-static void quatRotateBodyToECEF(double qw, double qx, double qy, double qz,
-                                 double vx, double vy, double vz,
+static void quatRotateBodyToECEF(double qw, double qx, double qy, double qz, double vx, double vy, double vz,
                                  double* ox, double* oy, double* oz);
-static void quatRotateECEFToBody(double qw, double qx, double qy, double qz,
-                                 double vx, double vy, double vz,
+static void quatRotateECEFToBody(double qw, double qx, double qy, double qz, double vx, double vy, double vz,
                                  double* ox, double* oy, double* oz);
 
 #define BOAT_STATE_DIM 22
@@ -139,7 +138,15 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    FILE* f = fopen(outPath, "w");
+    FILE* f = NULL;
+#ifdef _WIN32
+    if (fopen_s(&f, outPath, "w") != 0)
+    {
+        f = NULL;
+    }
+#else
+    f = fopen(outPath, "w");
+#endif
     if (!f)
     {
         LOG_ERROR("Failed to open output file.");
@@ -240,9 +247,9 @@ int main(int argc, char** argv)
 
 static void BoatTransition(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
-    const BoatInputs* inputs = (const BoatInputs*)userData;
+    (void) ekf;
+    (void) userData;
+    const BoatInputs* inputs = (const BoatInputs*) userData;
     const double dt = 0.1;
     const double mass = 50.0 * 0.45359237;
     const double K_throttle = 20.0;
@@ -280,10 +287,10 @@ static void BoatTransition(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void*
     omega_z += (inputs ? inputs->rudder_angle : 0.0) * K_delta;
 
     double half_dt = 0.5 * dt;
-    double dq_w = -half_dt * ( qx * omega_x + qy * omega_y + qz * omega_z );
-    double dq_x =  half_dt * ( qw * omega_x + qy * omega_z - qz * omega_y );
-    double dq_y =  half_dt * ( qw * omega_y - qx * omega_z + qz * omega_x );
-    double dq_z =  half_dt * ( qw * omega_z + qx * omega_y - qy * omega_x );
+    double dq_w = -half_dt * (qx * omega_x + qy * omega_y + qz * omega_z);
+    double dq_x = half_dt * (qw * omega_x + qy * omega_z - qz * omega_y);
+    double dq_y = half_dt * (qw * omega_y - qx * omega_z + qz * omega_x);
+    double dq_z = half_dt * (qw * omega_z + qx * omega_y - qy * omega_x);
 
     qw += dq_w;
     qx += dq_x;
@@ -333,8 +340,8 @@ static void BoatTransition(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void*
 
 static void BoatMeasurement(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     const double g = 9.80665;
 
     double px = ACCESS_MATRIX(*x, 0, 0);
@@ -415,10 +422,10 @@ static void BoatMeasurement(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* use
 
 static void BoatUpdateA(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double time, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)time;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) time;
+    (void) userData;
     for (int i = 0; i < A->row; ++i)
     {
         for (int j = 0; j < A->col; ++j)
@@ -460,8 +467,7 @@ static int ecefToGeodetic(double x, double y, double z, double* lat_rad, double*
     double theta = atan2(z * a, p * b);
     double sin_t = sin(theta);
     double cos_t = cos(theta);
-    *lat_rad = atan2(z + ep2 * b * sin_t * sin_t * sin_t,
-                     p - e2 * a * cos_t * cos_t * cos_t);
+    *lat_rad = atan2(z + ep2 * b * sin_t * sin_t * sin_t, p - e2 * a * cos_t * cos_t * cos_t);
     double sin_lat = sin(*lat_rad);
     double N = a / sqrt(1.0 - e2 * sin_lat * sin_lat);
     *h_m = p / cos(*lat_rad) - N;
@@ -477,7 +483,7 @@ static void nedToEcef(double lat_rad, double lon_rad, double n, double e, double
 
     *x = -sin_lat * cos_lon * n - sin_lon * e - cos_lat * cos_lon * d;
     *y = -sin_lat * sin_lon * n + cos_lon * e - cos_lat * sin_lon * d;
-    *z =  cos_lat * n - sin_lat * d;
+    *z = cos_lat * n - sin_lat * d;
 }
 
 static void quatNormalize(double* qw, double* qx, double* qy, double* qz)
@@ -497,13 +503,12 @@ static void quatNormalize(double* qw, double* qx, double* qy, double* qz)
     *qz /= norm;
 }
 
-static void quatRotateBodyToECEF(double qw, double qx, double qy, double qz,
-                                 double vx, double vy, double vz,
+static void quatRotateBodyToECEF(double qw, double qx, double qy, double qz, double vx, double vy, double vz,
                                  double* ox, double* oy, double* oz)
 {
-    double ix =  qw * vx + qy * vz - qz * vy;
-    double iy =  qw * vy + qz * vx - qx * vz;
-    double iz =  qw * vz + qx * vy - qy * vx;
+    double ix = qw * vx + qy * vz - qz * vy;
+    double iy = qw * vy + qz * vx - qx * vz;
+    double iz = qw * vz + qx * vy - qy * vx;
     double iw = -qx * vx - qy * vy - qz * vz;
 
     *ox = ix * qw + iw * -qx + iy * -qz - iz * -qy;
@@ -511,14 +516,13 @@ static void quatRotateBodyToECEF(double qw, double qx, double qy, double qz,
     *oz = iz * qw + iw * -qz + ix * -qy - iy * -qx;
 }
 
-static void quatRotateECEFToBody(double qw, double qx, double qy, double qz,
-                                 double vx, double vy, double vz,
+static void quatRotateECEFToBody(double qw, double qx, double qy, double qz, double vx, double vy, double vz,
                                  double* ox, double* oy, double* oz)
 {
-    double ix =  qw * vx - qy * vz + qz * vy;
-    double iy =  qw * vy - qz * vx + qx * vz;
-    double iz =  qw * vz - qx * vy + qy * vx;
-    double iw =  qx * vx + qy * vy + qz * vz;
+    double ix = qw * vx - qy * vz + qz * vy;
+    double iy = qw * vy - qz * vx + qx * vz;
+    double iz = qw * vz - qx * vy + qy * vx;
+    double iw = qx * vx + qy * vy + qz * vz;
 
     *ox = ix * qw + iw * qx + iy * qz - iz * qy;
     *oy = iy * qw + iw * qy + iz * qx - ix * qz;
@@ -527,7 +531,15 @@ static void quatRotateECEFToBody(double qw, double qx, double qy, double qz,
 
 static int wmmLoadModel(const char* path)
 {
-    FILE* f = fopen(path, "r");
+    FILE* f = NULL;
+#ifdef _WIN32
+    if (fopen_s(&f, path, "r") != 0)
+    {
+        f = NULL;
+    }
+#else
+    f = fopen(path, "r");
+#endif
     if (!f)
     {
         return -1;
@@ -550,12 +562,16 @@ static int wmmLoadModel(const char* path)
     double g, h, dg, dh;
     while (fgets(line, sizeof(line), f))
     {
+#ifdef _WIN32
+        if (sscanf_s(line, "%d %d %lf %lf %lf %lf", &n, &m, &g, &h, &dg, &dh) == 6)
+#else
         if (sscanf(line, "%d %d %lf %lf %lf %lf", &n, &m, &g, &h, &dg, &dh) == 6)
+#endif
         {
             if (n <= WMM_NMAX && m <= WMM_NMAX)
             {
-                g_coeff[n][m] = (int)lrint(g * 100.0);
-                h_coeff[n][m] = (int)lrint(h * 100.0);
+                g_coeff[n][m] = (int) lrint(g * 100.0);
+                h_coeff[n][m] = (int) lrint(h * 100.0);
             }
         }
     }
@@ -576,7 +592,7 @@ static int wmmFieldNED(double lat_rad, double lon_rad, double alt_m, double* n, 
     double sin_lat = sin(lat_rad);
     double cos_lat = cos(lat_rad);
     double r = sqrt((a * a * cos_lat * cos_lat + b * b * sin_lat * sin_lat));
-    (void)r;
+    (void) r;
     double rho = (a * a * cos_lat * cos_lat + b * b * sin_lat * sin_lat);
     double z = (b * b * sin_lat) / sqrt(rho);
     double x = (a * a * cos_lat) / sqrt(rho);
@@ -589,25 +605,25 @@ static int wmmFieldNED(double lat_rad, double lon_rad, double alt_m, double* n, 
     double dP[WMM_NMAX + 1][WMM_NMAX + 1] = {0};
     P[0][0] = 1.0;
 
-    for (int n = 1; n <= WMM_NMAX; ++n)
+    for (int n_idx = 1; n_idx <= WMM_NMAX; ++n_idx)
     {
-        for (int m = 0; m <= n; ++m)
+        for (int m = 0; m <= n_idx; ++m)
         {
-            if (n == m)
+            if (n_idx == m)
             {
-                P[n][m] = st * P[n - 1][m - 1];
-                dP[n][m] = st * dP[n - 1][m - 1] + ct * P[n - 1][m - 1];
+                P[n_idx][m] = st * P[n_idx - 1][m - 1];
+                dP[n_idx][m] = st * dP[n_idx - 1][m - 1] + ct * P[n_idx - 1][m - 1];
             }
-            else if (n == 1 || m == n - 1)
+            else if (n_idx == 1 || m == n_idx - 1)
             {
-                P[n][m] = ct * P[n - 1][m];
-                dP[n][m] = ct * dP[n - 1][m] - st * P[n - 1][m];
+                P[n_idx][m] = ct * P[n_idx - 1][m];
+                dP[n_idx][m] = ct * dP[n_idx - 1][m] - st * P[n_idx - 1][m];
             }
             else
             {
-                double k = ((n - 1) * (n - 1) - m * m) / (double)((2 * n - 1) * (2 * n - 3));
-                P[n][m] = ct * P[n - 1][m] - k * P[n - 2][m];
-                dP[n][m] = ct * dP[n - 1][m] - st * P[n - 1][m] - k * dP[n - 2][m];
+                double k = ((n_idx - 1) * (n_idx - 1) - m * m) / (double) ((2 * n_idx - 1) * (2 * n_idx - 3));
+                P[n_idx][m] = ct * P[n_idx - 1][m] - k * P[n_idx - 2][m];
+                dP[n_idx][m] = ct * dP[n_idx - 1][m] - st * P[n_idx - 1][m] - k * dP[n_idx - 2][m];
             }
         }
     }
@@ -615,21 +631,21 @@ static int wmmFieldNED(double lat_rad, double lon_rad, double alt_m, double* n, 
     double Br = 0.0;
     double Bt = 0.0;
     double Bp = 0.0;
-    for (int n = 1; n <= WMM_NMAX; ++n)
+    for (int n_idx = 1; n_idx <= WMM_NMAX; ++n_idx)
     {
-        double ar = pow(sr, n + 2);
-        for (int m = 0; m <= n; ++m)
+        double ar = pow(sr, n_idx + 2);
+        for (int m = 0; m <= n_idx; ++m)
         {
-            double g = g_coeff[n][m] / 100.0;
-            double h = h_coeff[n][m] / 100.0;
+            double g = g_coeff[n_idx][m] / 100.0;
+            double h = h_coeff[n_idx][m] / 100.0;
             double cos_m = cos(m * lon_rad);
             double sin_m = sin(m * lon_rad);
             double t = g * cos_m + h * sin_m;
-            Br += ar * (n + 1) * t * P[n][m];
-            Bt -= ar * t * dP[n][m];
+            Br += ar * (n_idx + 1) * t * P[n_idx][m];
+            Bt -= ar * t * dP[n_idx][m];
             if (m != 0)
             {
-                Bp += ar * m * (g * sin_m - h * cos_m) * P[n][m] / ct;
+                Bp += ar * m * (g * sin_m - h * cos_m) * P[n_idx][m] / ct;
             }
         }
     }

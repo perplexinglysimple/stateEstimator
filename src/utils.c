@@ -17,58 +17,59 @@ const char* GetFileNameFromPath(const char* path)
 
 // This is stupid windows stuff to get the filename from the path.... Linux is so much simpler
 
-#define FAILURE_NULL_ARGUMENT       ((DWORD)-1)
-#define FAILURE_API_CALL            ((DWORD)-2)
-#define FAILURE_INSUFFICIENT_BUFFER ((DWORD)-3)
+#define FAILURE_NULL_ARGUMENT ((DWORD) -1)
+#define FAILURE_API_CALL ((DWORD) -2)
+#define FAILURE_INSUFFICIENT_BUFFER ((DWORD) -3)
 
 DWORD GetBasePathFromPathName(LPCTSTR szPathName, LPTSTR szBasePath, DWORD dwBasePathSize)
 {
-  TCHAR   szDrive[_MAX_DRIVE] = { 0 };
-  TCHAR   szDir[_MAX_DIR]     = { 0 };
-  TCHAR   szFname[_MAX_FNAME] = { 0 };
-  TCHAR   szExt[_MAX_EXT]     = { 0 };
-  size_t  PathLength;
-  DWORD   dwReturnCode;
-  DWORD   dwFileNameIndex;
+    TCHAR szDrive[_MAX_DRIVE] = {0};
+    TCHAR szDir[_MAX_DIR] = {0};
+    TCHAR szFname[_MAX_FNAME] = {0};
+    TCHAR szExt[_MAX_EXT] = {0};
+    size_t PathLength;
+    DWORD dwReturnCode;
+    DWORD dwFileNameIndex;
 
-  // Parameter validation
-  if (szPathName == NULL || szBasePath == NULL)
-  {
-    return FAILURE_NULL_ARGUMENT;
-  }
+    // Parameter validation
+    if (szPathName == NULL || szBasePath == NULL)
+    {
+        return FAILURE_NULL_ARGUMENT;
+    }
 
-  // Split the path into its components
-  dwReturnCode = _tsplitpath_s(szPathName, szDrive, _MAX_DRIVE, szDir, _MAX_DIR, szFname, _MAX_FNAME, szExt, _MAX_EXT);
-  if (dwReturnCode != 0)
-  {
-    _ftprintf(stderr, TEXT("Error splitting path. _tsplitpath_s returned %d.\n"), dwReturnCode);
-    return FAILURE_API_CALL;
-  }
+    // Split the path into its components
+    dwReturnCode =
+        _tsplitpath_s(szPathName, szDrive, _MAX_DRIVE, szDir, _MAX_DIR, szFname, _MAX_FNAME, szExt, _MAX_EXT);
+    if (dwReturnCode != 0)
+    {
+        _ftprintf(stderr, TEXT("Error splitting path. _tsplitpath_s returned %d.\n"), dwReturnCode);
+        return FAILURE_API_CALL;
+    }
 
-  // Check that the provided buffer is large enough to store the results and a terminal null character
-  PathLength = _tcslen(szDrive) + _tcslen(szDir);
-  if ((PathLength + sizeof(TCHAR)) > dwBasePathSize)
-  {
-    _ftprintf(stderr, TEXT("Insufficient buffer. Required %zd. Provided: %d\n"), PathLength, dwBasePathSize);
-    return FAILURE_INSUFFICIENT_BUFFER;
-  }
+    // Check that the provided buffer is large enough to store the results and a terminal null character
+    PathLength = _tcslen(szDrive) + _tcslen(szDir);
+    if ((PathLength + sizeof(TCHAR)) > dwBasePathSize)
+    {
+        _ftprintf(stderr, TEXT("Insufficient buffer. Required %zd. Provided: %d\n"), PathLength, dwBasePathSize);
+        return FAILURE_INSUFFICIENT_BUFFER;
+    }
 
-  // Copy the szDrive and szDir into the provided buffer to form the basepath
-  if ((dwReturnCode = _tcscpy_s(szBasePath, dwBasePathSize, szDrive)) != 0)
-  {
-    _ftprintf(stderr, TEXT("Error copying string. _tcscpy_s returned %d\n"), dwReturnCode);
-    return FAILURE_API_CALL;
-  }
-  if ((dwReturnCode = _tcscat_s(szBasePath, dwBasePathSize, szDir)) != 0)
-  {
-    _ftprintf(stderr, TEXT("Error copying string. _tcscat_s returned %d\n"), dwReturnCode);
-    return FAILURE_API_CALL;
-  }
+    // Copy the szDrive and szDir into the provided buffer to form the basepath
+    if ((dwReturnCode = _tcscpy_s(szBasePath, dwBasePathSize, szDrive)) != 0)
+    {
+        _ftprintf(stderr, TEXT("Error copying string. _tcscpy_s returned %d\n"), dwReturnCode);
+        return FAILURE_API_CALL;
+    }
+    if ((dwReturnCode = _tcscat_s(szBasePath, dwBasePathSize, szDir)) != 0)
+    {
+        _ftprintf(stderr, TEXT("Error copying string. _tcscat_s returned %d\n"), dwReturnCode);
+        return FAILURE_API_CALL;
+    }
 
-  // Calculate the index of the start of the filename
-  dwFileNameIndex = (DWORD) _tcslen(szBasePath);
+    // Calculate the index of the start of the filename
+    dwFileNameIndex = (DWORD) _tcslen(szBasePath);
 
-  return dwFileNameIndex;
+    return dwFileNameIndex;
 }
 
 const char* GetFileNameFromPath(const char* path)

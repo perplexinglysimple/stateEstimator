@@ -70,10 +70,14 @@ int main()
     double f10 = cos(x0);
     double f11 = -sin(x1);
 
-    if (assertNear(ACCESS_MATRIX(*(ekf._F), 0, 0), f00, 1e-3, "F(0,0)") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf._F), 0, 1), f01, 1e-3, "F(0,1)") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf._F), 1, 0), f10, 1e-3, "F(1,0)") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf._F), 1, 1), f11, 1e-3, "F(1,1)") != 0) return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf._F), 0, 0), f00, 1e-3, "F(0,0)") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf._F), 0, 1), f01, 1e-3, "F(0,1)") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf._F), 1, 0), f10, 1e-3, "F(1,0)") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf._F), 1, 1), f11, 1e-3, "F(1,1)") != 0)
+        return -1;
 
     EKFMeasurement measurement = {0};
     STATIC_MATRIX_DIRECTIVE(measurement.z, 2, 1, z);
@@ -97,10 +101,14 @@ int main()
     double h10 = 0.0;
     double h11 = 2.0 * x1h;
 
-    if (assertNear(ACCESS_MATRIX(*(ekf._H), 0, 0), h00, 1e-3, "H(0,0)") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf._H), 0, 1), h01, 1e-3, "H(0,1)") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf._H), 1, 0), h10, 1e-3, "H(1,0)") != 0) return -1;
-    if (assertNear(ACCESS_MATRIX(*(ekf._H), 1, 1), h11, 1e-3, "H(1,1)") != 0) return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf._H), 0, 0), h00, 1e-3, "H(0,0)") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf._H), 0, 1), h01, 1e-3, "H(0,1)") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf._H), 1, 0), h10, 1e-3, "H(1,0)") != 0)
+        return -1;
+    if (assertNear(ACCESS_MATRIX(*(ekf._H), 1, 1), h11, 1e-3, "H(1,1)") != 0)
+        return -1;
 
     if (EKFCleanup(&ekf) != EKF_SUCCESS)
     {
@@ -113,8 +121,8 @@ int main()
 
 static void TransitionFD(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     double x0 = ACCESS_MATRIX(*x, 0, 0);
     double x1 = ACCESS_MATRIX(*x, 1, 0);
     double y0 = x0 * x0 + x1;
@@ -133,8 +141,8 @@ static void TransitionFD(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void* u
 
 static void MeasurementFD(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)ekf;
-    (void)userData;
+    (void) ekf;
+    (void) userData;
     double x0 = ACCESS_MATRIX(*x, 0, 0);
     double x1 = ACCESS_MATRIX(*x, 1, 0);
     double z0 = x0 * x0;
@@ -153,10 +161,10 @@ static void MeasurementFD(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userD
 
 static void IdentityUpdateA(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double time, void* userData)
 {
-    (void)x;
-    (void)ekf;
-    (void)time;
-    (void)userData;
+    (void) x;
+    (void) ekf;
+    (void) time;
+    (void) userData;
     if (A->jaggedAlloc)
     {
         A->mat[0][0] = 1;

@@ -63,20 +63,20 @@ int main()
     return 0;
 }
 
-void TransitionFunction(EKFMatrix *x, EKFMatrix *x_predicted, EKFState* ekf, void* userData)
+void TransitionFunction(EKFMatrix* x, EKFMatrix* x_predicted, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)x_predicted;
-    (void)ekf;
-    (void)userData;
+    (void) x;
+    (void) x_predicted;
+    (void) ekf;
+    (void) userData;
     LOG_INFO("TransitionFunction() called.");
 }
 
-void MeasurementFunction(EKFMatrix *x, EKFMatrix *z, EKFState* ekf, void* userData)
+void MeasurementFunction(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)z;
-    (void)ekf;
-    (void)userData;
+    (void) x;
+    (void) z;
+    (void) ekf;
+    (void) userData;
     LOG_INFO("MeasurementFunction() called.");
 }

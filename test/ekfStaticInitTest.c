@@ -4,7 +4,6 @@
 // support for true and false
 #include <stdbool.h>
 
-
 // System dynamics model function prototype
 void TransitionFunction(EKFMatrix* x, EKFMatrix* x_predicted, EKFState* ekf, void* userData);
 // Measurement function prototype
@@ -14,7 +13,7 @@ int main()
 {
     EKFState ekf = {0};
     // Used for STATIC_ALLOC_EKF_DIRECTIVE
-    EKFState *ekf_ptr = &ekf;
+    EKFState* ekf_ptr = &ekf;
     EKFConfigOptions options = {0};
     // This should fail because the options struct is not initialized.
     if (EKFInit(&ekf, &options) == EKF_SUCCESS)
@@ -56,7 +55,7 @@ int main()
     options.mallocFlag = false;
 
     STATIC_ALLOC_EKF_DIRECTIVE(ekf_ptr, 1, 1);
-    
+
     // This should succeed because the options struct has been initialized and the ekf structs have been initialized.
     if (EKFInit(&ekf, &options) != EKF_SUCCESS)
     {
@@ -72,20 +71,20 @@ int main()
     return 0;
 }
 
-void TransitionFunction(EKFMatrix *x, EKFMatrix *x_predicted, EKFState* ekf, void* userData)
+void TransitionFunction(EKFMatrix* x, EKFMatrix* x_predicted, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)x_predicted;
-    (void)ekf;
-    (void)userData;
+    (void) x;
+    (void) x_predicted;
+    (void) ekf;
+    (void) userData;
     LOG_INFO("TransitionFunction() called.");
 }
 
-void MeasurementFunction(EKFMatrix *x, EKFMatrix *z, EKFState* ekf, void* userData)
+void MeasurementFunction(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData)
 {
-    (void)x;
-    (void)z;
-    (void)ekf;
-    (void)userData;
+    (void) x;
+    (void) z;
+    (void) ekf;
+    (void) userData;
     LOG_INFO("MeasurementFunction() called.");
 }
