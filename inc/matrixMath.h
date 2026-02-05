@@ -88,11 +88,11 @@ struct matrix {
 		} \
 	} while(0)
 
-#define __CONCAT(a, b) __CONCAT_INNER(a, b)
-#define __CONCAT_INNER(a, b) a ## b
+#define MM_CONCAT(a, b) MM_CONCAT_INNER(a, b)
+#define MM_CONCAT_INNER(a, b) a ## b
 
-#define MM_UNIQUE_NAME(base) __CONCAT(base, __COUNTER__)
-#define UNIQUE_NAME_PER_MACRO(base) __CONCAT(base, __LINE__)
+#define MM_UNIQUE_NAME(base) MM_CONCAT(base, __COUNTER__)
+#define UNIQUE_NAME_PER_MACRO(base) MM_CONCAT(base, __LINE__)
 
 /** @brief Access element (i, j) from a static matrix. */
 #define ACCESS_STATIC_MATRIX(m, i, j) \
@@ -132,14 +132,7 @@ struct matrix {
 		int _i, _j; \
 		for(_i = 0; _i < matrixptr->row; ++_i) { \
 			for(_j = 0; _j < matrixptr->col; ++_j) { \
-				if (matrixptr->jaggedAlloc) \
-				{ \
-					matrixptr->mat[_i][_j] = array[_i][_j]; \
-				} \
-				else \
-				{ \
-					matrixptr->_mat[_i * (*matrixptr).col + _j] = array[_i][_j]; \
-				} \
+				SET_MATRIX((*matrixptr), _i, _j, array[_i][_j]); \
 			} \
 		} \
 	} while(0)
@@ -151,13 +144,13 @@ struct matrix {
  * It is not thread-safe and should not be used in concurrent contexts.
  */
 #define STATIC_MATRIX_DIRECTIVE(ptr, _row, _col, name) \
-	static matrixType __CONCAT(name, UNIQUE_NAME_PER_MACRO(m_mat))[(_row)][(_col)]; \
-	static struct matrix __CONCAT(name, UNIQUE_NAME_PER_MACRO(m)) = { .mat = NULL, .initilized = 1, .row = (_row), .col = (_col), .jaggedAlloc = false }; \
-	__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)).mat = (matrixType **)__CONCAT(name, UNIQUE_NAME_PER_MACRO(m_mat)); \
-	__CONCAT(name, UNIQUE_NAME_PER_MACRO(m))._mat = (matrixType *)__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)).mat; \
-	int __CONCAT(name, UNIQUE_NAME_PER_MACRO(i)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(j)); \
-	_ZEROIZE_MATRIX(__CONCAT(name, UNIQUE_NAME_PER_MACRO(m)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(i)), __CONCAT(name, UNIQUE_NAME_PER_MACRO(j))); \
-	ptr = &__CONCAT(name, UNIQUE_NAME_PER_MACRO(m));
+	static matrixType MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(m_mat))[(_row)][(_col)]; \
+	static struct matrix MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(m)) = { .mat = NULL, .initilized = 1, .row = (_row), .col = (_col), .jaggedAlloc = false }; \
+	MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(m)).mat = (matrixType **)MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(m_mat)); \
+	MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(m))._mat = (matrixType *)MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(m)).mat; \
+	int MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(i)), MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(j)); \
+	_ZEROIZE_MATRIX(MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(m)), MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(i)), MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(j))); \
+	ptr = &MM_CONCAT(name, UNIQUE_NAME_PER_MACRO(m));
 	
 
 /** @brief Free a jagged matrix allocated with INIT_MATRIX. */

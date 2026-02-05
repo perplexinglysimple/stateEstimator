@@ -8,6 +8,18 @@
 #include <math.h>
 #include <string.h>
 
+// Tests return matrixReturnCodes; override EKF macro to avoid enum-conversion warnings.
+#ifdef MATRIX_MATH_RETURN_CHECK
+#undef MATRIX_MATH_RETURN_CHECK
+#endif
+#define MATRIX_MATH_RETURN_CHECK(ret) \
+    do { \
+        matrixReturnCodes _ret = (ret); \
+        if (_ret != MATRIX_SUCCESS) { \
+            return _ret; \
+        } \
+    } while (0)
+
 matrixReturnCodes copyTest(bool increasedLogging);
 matrixReturnCodes inverseTest(bool increasedLogging);
 matrixReturnCodes inverseTest3x3(bool increasedLogging);

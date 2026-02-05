@@ -17,6 +17,15 @@ if(ENABLE_COVERAGE)
     endif()
 endif()
 
+option(ENABLE_STRICT_WARNINGS "Enable -Wall/-Wextra and warnings-as-errors" ON)
+if(ENABLE_STRICT_WARNINGS)
+    if(MSVC)
+        add_compile_options(/W4 /WX)
+    else()
+        add_compile_options(-Wall -Wextra -Werror)
+    endif()
+endif()
+
 #set(CMAKE_C_FLAGS "-Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function -Wno-unused-value -Wno-unused-result -Wno-unused-label -Wno-unused-local-typedefs -Wno-unused-macros -Wno-u")
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__FILENAME__='\"$(subst ${CMAKE_SOURCE_DIR}/,,$(abspath $<))\"'")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__FILENAME__='\"$(subst
@@ -42,6 +51,10 @@ add_executable(ekfMeasurementDimensionTest test/ekfMeasurementDimensionTest.c)
 add_executable(ekfBoatModelTest test/ekfBoatModelTest.c)
 add_executable(ekfBoatExportTest test/ekfBoatExportTest.c)
 
+if(NOT MSVC)
+    set(MATH_LIB m)
+endif()
+
 enable_testing()
 
 add_test(NAME ekfMallocTest COMMAND $<TARGET_FILE:ekfMallocTest>)
@@ -56,6 +69,8 @@ add_test(NAME ekfFilterpyExportNonlinearTest COMMAND $<TARGET_FILE:ekfFilterpyEx
 add_test(NAME ekfMeasurementDimensionTest COMMAND $<TARGET_FILE:ekfMeasurementDimensionTest>)
 add_test(NAME ekfBoatModelTest COMMAND $<TARGET_FILE:ekfBoatModelTest>)
 add_test(NAME ekfBoatExportTest COMMAND $<TARGET_FILE:ekfBoatExportTest> ${CMAKE_BINARY_DIR}/ekf_boat_compare.csv)
+set_tests_properties(ekfBoatModelTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+set_tests_properties(ekfBoatExportTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME ekfMatrixMath_copy COMMAND $<TARGET_FILE:ekfMatrixMathTest> copy)
 add_test(NAME ekfMatrixMath_inverse2x2 COMMAND $<TARGET_FILE:ekfMatrixMathTest> inverse2x2)
 add_test(NAME ekfMatrixMath_inverse3x3 COMMAND $<TARGET_FILE:ekfMatrixMathTest> inverse3x3)
@@ -92,18 +107,43 @@ add_test(NAME ekfMatrixMath_nonsquare_mult COMMAND $<TARGET_FILE:ekfMatrixMathTe
 add_test(NAME ekfMatrixMath_nan_identity_minus_a COMMAND $<TARGET_FILE:ekfMatrixMathTest> nan_identity_minus_a)
 add_test(NAME ekfMatrixMath_aliasing_guards COMMAND $<TARGET_FILE:ekfMatrixMathTest> aliasing_guards)
 
-target_link_libraries(ekfMallocTest stateEstimatorLib)
-target_link_libraries(ekfStaticInitTest stateEstimatorLib)
-target_link_libraries(ekfPersonWalkTest stateEstimatorLib)
-target_link_libraries(ekfMatrixMathTest stateEstimatorLib)
-target_link_libraries(ekfJacobianUpdateTest stateEstimatorLib)
-target_link_libraries(ekfAdvancedUpdateTest stateEstimatorLib)
-target_link_libraries(ekfFiniteDiffJacobianTest stateEstimatorLib)
-target_link_libraries(ekfFilterpyExportTest stateEstimatorLib)
-target_link_libraries(ekfFilterpyExportNonlinearTest stateEstimatorLib)
-target_link_libraries(ekfMeasurementDimensionTest stateEstimatorLib)
-target_link_libraries(ekfBoatModelTest stateEstimatorLib)
-target_link_libraries(ekfBoatExportTest stateEstimatorLib)
+target_link_libraries(ekfMallocTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfStaticInitTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfPersonWalkTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfMatrixMathTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfJacobianUpdateTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfAdvancedUpdateTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfFiniteDiffJacobianTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfFilterpyExportTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfFilterpyExportNonlinearTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfMeasurementDimensionTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfBoatModelTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfBoatExportTest stateEstimatorLib ${MATH_LIB})
+
+set(TEST_TARGETS
+    ekfMallocTest
+    ekfStaticInitTest
+    ekfPersonWalkTest
+    ekfMatrixMathTest
+    ekfJacobianUpdateTest
+    ekfAdvancedUpdateTest
+    ekfFiniteDiffJacobianTest
+    ekfFilterpyExportTest
+    ekfFilterpyExportNonlinearTest
+    ekfMeasurementDimensionTest
+    ekfBoatModelTest
+    ekfBoatExportTest
+)
+
+option(FORCE_MATRIX_MATH_DEBUG_CHECKS_FOR_TESTS "Force matrix debug checks when running tests (even in Release)" ON)
+if(FORCE_MATRIX_MATH_DEBUG_CHECKS_FOR_TESTS)
+    # Matrix checks are compiled into the library, so enable them there.
+    target_compile_definitions(stateEstimatorLib PRIVATE MATRIX_MATH_DEBUG_CHECKS=1)
+    # Also enable for test translation units.
+    foreach(tgt IN LISTS TEST_TARGETS)
+        target_compile_definitions(${tgt} PRIVATE MATRIX_MATH_DEBUG_CHECKS=1)
+    endforeach()
+endif()
 
 install(TARGETS ekfMallocTest ekfStaticInitTest ekfPersonWalkTest ekfMatrixMathTest ekfJacobianUpdateTest ekfAdvancedUpdateTest ekfFiniteDiffJacobianTest ekfFilterpyExportTest ekfFilterpyExportNonlinearTest ekfMeasurementDimensionTest ekfBoatModelTest ekfBoatExportTest
         DESTINATION bin)

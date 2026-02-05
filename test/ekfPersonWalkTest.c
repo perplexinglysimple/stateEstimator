@@ -270,6 +270,7 @@ int main()
  */
 void TransitionFunction(EKFMatrix *x, EKFMatrix *x_predicted, EKFState* ekf, void* userData)
 {
+    (void)userData;
     LOG_FUNCTION();
     
     // x_predicted = A*x. Using A from the EKFState struct.
@@ -278,6 +279,8 @@ void TransitionFunction(EKFMatrix *x, EKFMatrix *x_predicted, EKFState* ekf, voi
 
 void MeasurementFunction(EKFMatrix *x, EKFMatrix *z, EKFState* ekf, void* userData)
 {
+    (void)ekf;
+    (void)userData;
     LOG_FUNCTION();
     // The measu
     copyMatrix(x, z);
@@ -331,6 +334,9 @@ void MeasurementJacobianFunction(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void
 
 void MotionModelUpdateCallback(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double timeElasped, void* userData)
 {
+    (void)x;
+    (void)ekf;
+    (void)userData;
     LOG_FUNCTION();
     // The A matrix is the same as the A matrix in the TransitionFunction.
     // Fill in the A matrix with the delta time and state.

@@ -3,16 +3,23 @@
 #ifdef __linux__
 const char* GetFileNameFromPath(const char* path)
 {
-    // This should not be called on linux but if it is, just return the basename of the path
-    return basename(path);
+    // basename may modify its input, so copy to a static buffer.
+    static char pathCopy[4096];
+    if (path == NULL)
+    {
+        return NULL;
+    }
+    strncpy(pathCopy, path, sizeof(pathCopy) - 1);
+    pathCopy[sizeof(pathCopy) - 1] = '\0';
+    return basename(pathCopy);
 }
 #elif _WIN32
 
 // This is stupid windows stuff to get the filename from the path.... Linux is so much simpler
 
-#define FAILURE_NULL_ARGUMENT       -1
-#define FAILURE_API_CALL            -2
-#define FAILURE_INSUFFICIENT_BUFFER -3
+#define FAILURE_NULL_ARGUMENT       ((DWORD)-1)
+#define FAILURE_API_CALL            ((DWORD)-2)
+#define FAILURE_INSUFFICIENT_BUFFER ((DWORD)-3)
 
 DWORD GetBasePathFromPathName(LPCTSTR szPathName, LPTSTR szBasePath, DWORD dwBasePathSize)
 {

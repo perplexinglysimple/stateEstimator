@@ -9,14 +9,16 @@
 // TODO fix matrix struct to not need this extra typedef
 typedef struct matrix EKFMatrix;
 
+typedef struct EKFState_ EKFState;
+
 // State transition function prototype
-typedef void (*EKFStateAFunction)(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, double time, void* userData);
+typedef void (*EKFStateAFunction)(EKFMatrix* A, EKFMatrix* x, EKFState* ekf, double time, void* userData);
 // System dynamics model function prototype
-typedef void (*EKFStateTransitionFunction)(EKFMatrix* x, EKFMatrix* x_predicted, struct EKFState_* ekf, void* userData);
+typedef void (*EKFStateTransitionFunction)(EKFMatrix* x, EKFMatrix* x_predicted, EKFState* ekf, void* userData);
 // Measurement function prototype
-typedef void (*EKFMeasurementFunction)(EKFMatrix* x, EKFMatrix* z, struct EKFState_* ekf, void* userData);
+typedef void (*EKFMeasurementFunction)(EKFMatrix* x, EKFMatrix* z, EKFState* ekf, void* userData);
 // Jacobian function prototype (fills J based on state x)
-typedef void (*EKFJacobianFunction)(EKFMatrix* x, EKFMatrix* J, struct EKFState_* ekf, void* userData);
+typedef void (*EKFJacobianFunction)(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData);
 
 typedef struct EKFState_ {
     EKFMatrix* x; // State vector

@@ -235,6 +235,8 @@ int main()
 
 static void BoatTransition(EKFMatrix* x, EKFMatrix* x_pred, EKFState* ekf, void* userData)
 {
+    (void)ekf;
+    (void)userData;
     const BoatInputs* inputs = (const BoatInputs*)userData;
     const double dt = 0.1;
     const double mass = 50.0 * 0.45359237;
@@ -565,6 +567,9 @@ static int wmmFieldNED(double lat_rad, double lon_rad, double alt_m, double* n, 
     double cos_lon = cos(lon_rad);
 
     double r = sqrt((a * a * cos_lat * cos_lat + b * b * sin_lat * sin_lat));
+    (void)sin_lon;
+    (void)cos_lon;
+    (void)r;
     double rho = (a * a * cos_lat * cos_lat + b * b * sin_lat * sin_lat);
     double z = (b * b * sin_lat) / sqrt(rho);
     double x = (a * a * cos_lat) / sqrt(rho);

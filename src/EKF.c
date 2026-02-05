@@ -1,5 +1,20 @@
 #include "EKF.h"
 
+// Bridge matrix null checks into EKF return codes.
+static inline matrixReturnCodes ekfMatrixNullCheck(struct matrix *ptr)
+{
+    NULL_CHECK_MATRIX(ptr);
+    return MATRIX_SUCCESS;
+}
+
+#define EKF_NULL_CHECK_MATRIX(ptr) \
+    do { \
+        matrixReturnCodes _mret = ekfMatrixNullCheck((ptr)); \
+        if (_mret != MATRIX_SUCCESS) { \
+            return (EKFReturnCodes)_mret; \
+        } \
+    } while (0)
+
 // ------------------------- Private Function Prototypes ------------------------- //
 /// @brief Calculate the Jacobian matrix of a function with respect to the state variables.
 void calculateJacobian(EKFMatrix *x, EKFMatrix *_x_predicted, EKFMatrix *Jacobian, EKFStateTransitionFunction f, EKFState *ekf, EKFMatrix *baseline, void* userData);
@@ -14,18 +29,18 @@ EKFReturnCodes EKFInit(EKFState *ekf, EKFConfigOptions *options)
   NULL_CHECK_EKF(options);
 
   // Check to see if the options struct is initialized.
-  NULL_CHECK_MATRIX(options->x0);
-  NULL_CHECK_MATRIX(options->P0);
-  NULL_CHECK_MATRIX(options->Q);
-  NULL_CHECK_MATRIX(options->R);
-  NULL_CHECK_MATRIX(options->A);
+  EKF_NULL_CHECK_MATRIX(options->x0);
+  EKF_NULL_CHECK_MATRIX(options->P0);
+  EKF_NULL_CHECK_MATRIX(options->Q);
+  EKF_NULL_CHECK_MATRIX(options->R);
+  EKF_NULL_CHECK_MATRIX(options->A);
 
   // Check to see if the ekf struct is initialized.
-  NULL_CHECK_MATRIX(ekf->x);
-  NULL_CHECK_MATRIX(ekf->P);
-  NULL_CHECK_MATRIX(ekf->Q);
-  NULL_CHECK_MATRIX(ekf->R);
-  NULL_CHECK_MATRIX(ekf->A);
+  EKF_NULL_CHECK_MATRIX(ekf->x);
+  EKF_NULL_CHECK_MATRIX(ekf->P);
+  EKF_NULL_CHECK_MATRIX(ekf->Q);
+  EKF_NULL_CHECK_MATRIX(ekf->R);
+  EKF_NULL_CHECK_MATRIX(ekf->A);
 
   int numMeasurements = options->numberOfMeasurements;
   if (numMeasurements <= 0)
@@ -105,24 +120,24 @@ EKFReturnCodes EKFInit(EKFState *ekf, EKFConfigOptions *options)
   else
   {
     // Check that the temporary storage matrices are the correct size and not null
-    NULL_CHECK_MATRIX(ekf->_P);
-    NULL_CHECK_MATRIX(ekf->_K);
-    NULL_CHECK_MATRIX(ekf->_z);
-    NULL_CHECK_MATRIX(ekf->_F);
-    NULL_CHECK_MATRIX(ekf->_H);
-    NULL_CHECK_MATRIX(ekf->_F_TRANSPOSE);
-    NULL_CHECK_MATRIX(ekf->_H_TRANSPOSE);
-    NULL_CHECK_MATRIX(ekf->_x_predicted);
-    NULL_CHECK_MATRIX(ekf->_S);
-    NULL_CHECK_MATRIX(ekf->_I);
-    NULL_CHECK_MATRIX(ekf->_TEMP1);
-    NULL_CHECK_MATRIX(ekf->_TEMP2);
-    NULL_CHECK_MATRIX(ekf->_TEMP3);
-    NULL_CHECK_MATRIX(ekf->_TEMP4);
-    NULL_CHECK_MATRIX(ekf->_TEMP5);
-    NULL_CHECK_MATRIX(ekf->_TEMP6);
-    NULL_CHECK_MATRIX(ekf->_TEMP7);
-    NULL_CHECK_MATRIX(ekf->_TEMP8);
+    EKF_NULL_CHECK_MATRIX(ekf->_P);
+    EKF_NULL_CHECK_MATRIX(ekf->_K);
+    EKF_NULL_CHECK_MATRIX(ekf->_z);
+    EKF_NULL_CHECK_MATRIX(ekf->_F);
+    EKF_NULL_CHECK_MATRIX(ekf->_H);
+    EKF_NULL_CHECK_MATRIX(ekf->_F_TRANSPOSE);
+    EKF_NULL_CHECK_MATRIX(ekf->_H_TRANSPOSE);
+    EKF_NULL_CHECK_MATRIX(ekf->_x_predicted);
+    EKF_NULL_CHECK_MATRIX(ekf->_S);
+    EKF_NULL_CHECK_MATRIX(ekf->_I);
+    EKF_NULL_CHECK_MATRIX(ekf->_TEMP1);
+    EKF_NULL_CHECK_MATRIX(ekf->_TEMP2);
+    EKF_NULL_CHECK_MATRIX(ekf->_TEMP3);
+    EKF_NULL_CHECK_MATRIX(ekf->_TEMP4);
+    EKF_NULL_CHECK_MATRIX(ekf->_TEMP5);
+    EKF_NULL_CHECK_MATRIX(ekf->_TEMP6);
+    EKF_NULL_CHECK_MATRIX(ekf->_TEMP7);
+    EKF_NULL_CHECK_MATRIX(ekf->_TEMP8);
   }
   // Initialize the state transition function.
   ekf->f = options->f;

@@ -57,6 +57,7 @@ lib/
 out/
 
 build/
+build-*/
 Testing/
 cmake-build-*/
 
@@ -65,5 +66,3 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
-
-.github
