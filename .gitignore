@@ -53,6 +53,9 @@ dkms.conf
 
 .vscode/
 .venv/
+__pycache__/
+*.pyc
+*.pyo
 lib/
 out/
 

@@ -36,6 +36,12 @@ matrixReturnCodes scaleTest(bool increasedLogging);
 matrixReturnCodes idenityMatrixMinusATest(bool increasedLogging);
 matrixReturnCodes dimensionMismatchTests(bool increasedLogging);
 matrixReturnCodes nanAndInfTests(bool increasedLogging);
+matrixReturnCodes nullCheckTests(bool increasedLogging);
+matrixReturnCodes nonInitCheckTests(bool increasedLogging);
+matrixReturnCodes allocationModeTests(bool increasedLogging);
+matrixReturnCodes dimCheckAddMacroTest(bool increasedLogging);
+matrixReturnCodes dimCheckMultMacroTest(bool increasedLogging);
+matrixReturnCodes dimCheckScaleMacroTest(bool increasedLogging);
 matrixReturnCodes staticMatrixAddTest(bool increasedLogging);
 matrixReturnCodes staticMatrixMultTest(bool increasedLogging);
 matrixReturnCodes staticMatrixTransposeTest(bool increasedLogging);
@@ -94,6 +100,12 @@ int main(int argc, char** argv)
         {"identity_minus_a", idenityMatrixMinusATest},
         {"dimension_mismatch", dimensionMismatchTests},
         {"nan_inf_check", nanAndInfTests},
+        {"null_checks", nullCheckTests},
+        {"non_init_checks", nonInitCheckTests},
+        {"alloc_modes", allocationModeTests},
+        {"dim_check_add_macro", dimCheckAddMacroTest},
+        {"dim_check_mult_macro", dimCheckMultMacroTest},
+        {"dim_check_scale_macro", dimCheckScaleMacroTest},
         {"static_add", staticMatrixAddTest},
         {"static_mult", staticMatrixMultTest},
         {"static_transpose", staticMatrixTransposeTest},
@@ -837,6 +849,417 @@ static matrixReturnCodes compareMatrixApprox(struct matrix* a, struct matrix* b,
     return MATRIX_SUCCESS;
 }
 
+matrixReturnCodes nullCheckTests(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Null Check Tests");
+
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
+
+    INIT_MATRIX(a, 2, 2);
+    INIT_MATRIX(b, 2, 2);
+    INIT_MATRIX(res, 2, 2);
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(multMatrix(NULL, b, res), MATRIX_NULL_POINTER, "multMatrix NULL a"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(multMatrix(a, NULL, res), MATRIX_NULL_POINTER, "multMatrix NULL b"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(multMatrix(a, b, NULL), MATRIX_NULL_RES_POINTER, "multMatrix NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(scaleMatrix(NULL, res, 2), MATRIX_NULL_POINTER, "scaleMatrix NULL a"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(scaleMatrix(a, NULL, 2), MATRIX_NULL_RES_POINTER, "scaleMatrix NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(addMatrix(NULL, b, res), MATRIX_NULL_POINTER, "addMatrix NULL a"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(addMatrix(a, NULL, res), MATRIX_NULL_POINTER, "addMatrix NULL b"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(addMatrix(a, b, NULL), MATRIX_NULL_RES_POINTER, "addMatrix NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(subMatrix(NULL, b, res), MATRIX_NULL_POINTER, "subMatrix NULL a"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(subMatrix(a, NULL, res), MATRIX_NULL_POINTER, "subMatrix NULL b"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(subMatrix(a, b, NULL), MATRIX_NULL_RES_POINTER, "subMatrix NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrix(NULL, res), MATRIX_NULL_POINTER, "inverseMatrix NULL a"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(inverseMatrix(a, NULL), MATRIX_NULL_RES_POINTER, "inverseMatrix NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrixWithJitter(NULL, res, (matrixType) 1e-6, 2, (matrixType) 10),
+                                              MATRIX_NULL_POINTER, "inverseMatrixWithJitter NULL a"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrixWithJitter(a, NULL, (matrixType) 1e-6, 2, (matrixType) 10),
+                                              MATRIX_NULL_RES_POINTER, "inverseMatrixWithJitter NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(setIdentityMatrix(NULL), MATRIX_NULL_POINTER, "setIdentityMatrix NULL a"));
+
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(transposeMatrix(NULL, res), MATRIX_NULL_POINTER, "transposeMatrix NULL a"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(transposeMatrix(a, NULL), MATRIX_NULL_POINTER, "transposeMatrix NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(identityMatrixMinusA(NULL, res), MATRIX_NULL_POINTER, "identityMatrixMinusA NULL a"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(identityMatrixMinusA(a, NULL), MATRIX_NULL_RES_POINTER, "identityMatrixMinusA NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(compareMatrieces(NULL, b), MATRIX_NULL_POINTER, "compareMatrieces NULL a"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(compareMatrieces(a, NULL), MATRIX_NULL_POINTER, "compareMatrieces NULL b"));
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(copyMatrix(NULL, res), MATRIX_NULL_POINTER, "copyMatrix NULL a"));
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(copyMatrix(a, NULL), MATRIX_NULL_RES_POINTER, "copyMatrix NULL res"));
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(nanCheckMatrix(NULL), MATRIX_NULL_POINTER, "nanCheckMatrix NULL a"));
+
+    // printMatrix has no return code; verify it tolerates NULL.
+    printMatrix(NULL);
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(b);
+    FREE_MATRIX(res);
+
+    LOG_INFO("Completed Null Check Tests");
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes nonInitCheckTests(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Non-Init Check Tests");
+
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
+
+    INIT_MATRIX(a, 2, 2);
+    INIT_MATRIX(b, 2, 2);
+    INIT_MATRIX(res, 2, 2);
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(multMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "multMatrix non-init a"));
+    a->initilized = 1;
+    b->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(multMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "multMatrix non-init b"));
+    b->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(multMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "multMatrix non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(scaleMatrix(a, res, 2), MATRIX_NOT_INITIALIZED, "scaleMatrix non-init a"));
+    a->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(scaleMatrix(a, res, 2), MATRIX_NOT_INITIALIZED, "scaleMatrix non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(addMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "addMatrix non-init a"));
+    a->initilized = 1;
+    b->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(addMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "addMatrix non-init b"));
+    b->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(addMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "addMatrix non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(subMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "subMatrix non-init a"));
+    a->initilized = 1;
+    b->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(subMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "subMatrix non-init b"));
+    b->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(subMatrix(a, b, res), MATRIX_NOT_INITIALIZED, "subMatrix non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(inverseMatrix(a, res), MATRIX_NOT_INITIALIZED, "inverseMatrix non-init a"));
+    a->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(inverseMatrix(a, res), MATRIX_NOT_INITIALIZED, "inverseMatrix non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrixWithJitter(a, res, (matrixType) 1e-6, 2, (matrixType) 10),
+                                              MATRIX_NOT_INITIALIZED, "inverseMatrixWithJitter non-init a"));
+    a->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrixWithJitter(a, res, (matrixType) 1e-6, 2, (matrixType) 10),
+                                              MATRIX_NOT_INITIALIZED, "inverseMatrixWithJitter non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(setIdentityMatrix(a), MATRIX_NOT_INITIALIZED, "setIdentityMatrix non-init"));
+    a->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(transposeMatrix(a, res), MATRIX_NOT_INITIALIZED, "transposeMatrix non-init a"));
+    a->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(transposeMatrix(a, res), MATRIX_NOT_INITIALIZED, "transposeMatrix non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(identityMatrixMinusA(a, res), MATRIX_NOT_INITIALIZED, "identityMatrixMinusA non-init a"));
+    a->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(identityMatrixMinusA(a, res), MATRIX_NOT_INITIALIZED, "identityMatrixMinusA non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(compareMatrieces(a, b), MATRIX_NOT_INITIALIZED, "compareMatrieces non-init a"));
+    a->initilized = 1;
+    b->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(compareMatrieces(a, b), MATRIX_NOT_INITIALIZED, "compareMatrieces non-init b"));
+    b->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(copyMatrix(a, res), MATRIX_NOT_INITIALIZED, "copyMatrix non-init a"));
+    a->initilized = 1;
+    res->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(copyMatrix(a, res), MATRIX_NOT_INITIALIZED, "copyMatrix non-init res"));
+    res->initilized = 1;
+
+    a->initilized = 0;
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(nanCheckMatrix(a), MATRIX_NOT_INITIALIZED, "nanCheckMatrix non-init"));
+    a->initilized = 1;
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(b);
+    FREE_MATRIX(res);
+
+    LOG_INFO("Completed Non-Init Check Tests");
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes allocationModeTests(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Allocation Mode Tests");
+
+    struct matrix* j_a = NULL;
+    struct matrix* j_b = NULL;
+    struct matrix* j_res = NULL;
+    struct matrix* j_expected = NULL;
+
+    INIT_MATRIX(j_a, 2, 2);
+    INIT_MATRIX(j_b, 2, 2);
+    INIT_MATRIX(j_res, 2, 2);
+    INIT_MATRIX(j_expected, 2, 2);
+
+    SET_MATRIX((*j_a), 0, 0, 1);
+    SET_MATRIX((*j_a), 0, 1, 2);
+    SET_MATRIX((*j_a), 1, 0, 3);
+    SET_MATRIX((*j_a), 1, 1, 4);
+
+    SET_MATRIX((*j_b), 0, 0, 5);
+    SET_MATRIX((*j_b), 0, 1, 6);
+    SET_MATRIX((*j_b), 1, 0, 7);
+    SET_MATRIX((*j_b), 1, 1, 8);
+
+    SET_MATRIX((*j_expected), 0, 0, 6);
+    SET_MATRIX((*j_expected), 0, 1, 8);
+    SET_MATRIX((*j_expected), 1, 0, 10);
+    SET_MATRIX((*j_expected), 1, 1, 12);
+
+    MATRIX_MATH_RETURN_CHECK(addMatrix(j_a, j_b, j_res));
+    MATRIX_MATH_RETURN_CHECK(compareMatrieces(j_res, j_expected));
+
+    SET_MATRIX((*j_expected), 0, 0, -4);
+    SET_MATRIX((*j_expected), 0, 1, -4);
+    SET_MATRIX((*j_expected), 1, 0, -4);
+    SET_MATRIX((*j_expected), 1, 1, -4);
+
+    MATRIX_MATH_RETURN_CHECK(subMatrix(j_a, j_b, j_res));
+    MATRIX_MATH_RETURN_CHECK(compareMatrieces(j_res, j_expected));
+
+    FREE_MATRIX(j_a);
+    FREE_MATRIX(j_b);
+    FREE_MATRIX(j_res);
+    FREE_MATRIX(j_expected);
+
+    struct matrix* s_a = NULL;
+    struct matrix* s_b = NULL;
+    struct matrix* s_res = NULL;
+    struct matrix* s_expected = NULL;
+
+    STATIC_MATRIX_DIRECTIVE(s_a, 2, 2, s_a);
+    STATIC_MATRIX_DIRECTIVE(s_b, 2, 2, s_b);
+    STATIC_MATRIX_DIRECTIVE(s_res, 2, 2, s_res);
+    STATIC_MATRIX_DIRECTIVE(s_expected, 2, 2, s_expected);
+
+    SET_MATRIX((*s_a), 0, 0, 1);
+    SET_MATRIX((*s_a), 0, 1, 2);
+    SET_MATRIX((*s_a), 1, 0, 3);
+    SET_MATRIX((*s_a), 1, 1, 4);
+
+    SET_MATRIX((*s_b), 0, 0, 5);
+    SET_MATRIX((*s_b), 0, 1, 6);
+    SET_MATRIX((*s_b), 1, 0, 7);
+    SET_MATRIX((*s_b), 1, 1, 8);
+
+    SET_MATRIX((*s_expected), 0, 0, 6);
+    SET_MATRIX((*s_expected), 0, 1, 8);
+    SET_MATRIX((*s_expected), 1, 0, 10);
+    SET_MATRIX((*s_expected), 1, 1, 12);
+
+    MATRIX_MATH_RETURN_CHECK(addMatrix(s_a, s_b, s_res));
+    MATRIX_MATH_RETURN_CHECK(compareMatrieces(s_res, s_expected));
+
+    SET_MATRIX((*s_expected), 0, 0, -4);
+    SET_MATRIX((*s_expected), 0, 1, -4);
+    SET_MATRIX((*s_expected), 1, 0, -4);
+    SET_MATRIX((*s_expected), 1, 1, -4);
+
+    MATRIX_MATH_RETURN_CHECK(subMatrix(s_a, s_b, s_res));
+    MATRIX_MATH_RETURN_CHECK(compareMatrieces(s_res, s_expected));
+
+    // Mixed allocation modes: jagged + static
+    struct matrix* j_mixed = NULL;
+    struct matrix* j_mixed_res = NULL;
+    struct matrix* j_mixed_expected = NULL;
+    INIT_MATRIX(j_mixed, 2, 2);
+    INIT_MATRIX(j_mixed_res, 2, 2);
+    INIT_MATRIX(j_mixed_expected, 2, 2);
+
+    SET_MATRIX((*j_mixed), 0, 0, 1);
+    SET_MATRIX((*j_mixed), 0, 1, 2);
+    SET_MATRIX((*j_mixed), 1, 0, 3);
+    SET_MATRIX((*j_mixed), 1, 1, 4);
+
+    SET_MATRIX((*j_mixed_expected), 0, 0, 6);
+    SET_MATRIX((*j_mixed_expected), 0, 1, 8);
+    SET_MATRIX((*j_mixed_expected), 1, 0, 10);
+    SET_MATRIX((*j_mixed_expected), 1, 1, 12);
+
+    MATRIX_MATH_RETURN_CHECK(addMatrix(j_mixed, s_b, j_mixed_res));
+    MATRIX_MATH_RETURN_CHECK(compareMatrieces(j_mixed_res, j_mixed_expected));
+
+    SET_MATRIX((*j_mixed_expected), 0, 0, -4);
+    SET_MATRIX((*j_mixed_expected), 0, 1, -4);
+    SET_MATRIX((*j_mixed_expected), 1, 0, -4);
+    SET_MATRIX((*j_mixed_expected), 1, 1, -4);
+
+    MATRIX_MATH_RETURN_CHECK(subMatrix(j_mixed, s_b, j_mixed_res));
+    MATRIX_MATH_RETURN_CHECK(compareMatrieces(j_mixed_res, j_mixed_expected));
+
+    FREE_MATRIX(j_mixed);
+    FREE_MATRIX(j_mixed_res);
+    FREE_MATRIX(j_mixed_expected);
+
+    // Mixed allocation modes: static result with jagged inputs
+    struct matrix* j_mixed_b = NULL;
+    INIT_MATRIX(j_mixed_b, 2, 2);
+
+    SET_MATRIX((*j_mixed_b), 0, 0, 5);
+    SET_MATRIX((*j_mixed_b), 0, 1, 6);
+    SET_MATRIX((*j_mixed_b), 1, 0, 7);
+    SET_MATRIX((*j_mixed_b), 1, 1, 8);
+
+    SET_MATRIX((*s_expected), 0, 0, 6);
+    SET_MATRIX((*s_expected), 0, 1, 8);
+    SET_MATRIX((*s_expected), 1, 0, 10);
+    SET_MATRIX((*s_expected), 1, 1, 12);
+
+    MATRIX_MATH_RETURN_CHECK(addMatrix(s_a, j_mixed_b, s_res));
+    MATRIX_MATH_RETURN_CHECK(compareMatrieces(s_res, s_expected));
+
+    SET_MATRIX((*s_expected), 0, 0, -4);
+    SET_MATRIX((*s_expected), 0, 1, -4);
+    SET_MATRIX((*s_expected), 1, 0, -4);
+    SET_MATRIX((*s_expected), 1, 1, -4);
+
+    MATRIX_MATH_RETURN_CHECK(subMatrix(s_a, j_mixed_b, s_res));
+    MATRIX_MATH_RETURN_CHECK(compareMatrieces(s_res, s_expected));
+
+    FREE_MATRIX(j_mixed_b);
+
+    LOG_INFO("Completed Allocation Mode Tests");
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes dimCheckAddMacroTest(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Dim Check Add Macro Test");
+
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
+
+    INIT_MATRIX(a, 2, 2);
+    INIT_MATRIX(b, 2, 3);
+    INIT_MATRIX(res, 2, 2);
+
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(addMatrix(a, b, res), MATRIX_DIMENSION_MISMATCH, "DIMENSION_CHECK_ADD_MATRIX addMatrix"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(subMatrix(a, b, res), MATRIX_DIMENSION_MISMATCH, "DIMENSION_CHECK_ADD_MATRIX subMatrix"));
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(b);
+    FREE_MATRIX(res);
+
+    LOG_INFO("Completed Dim Check Add Macro Test");
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes dimCheckMultMacroTest(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Dim Check Mult Macro Test");
+
+    struct matrix* a = NULL;
+    struct matrix* b = NULL;
+    struct matrix* res = NULL;
+
+    INIT_MATRIX(a, 2, 3);
+    INIT_MATRIX(b, 2, 2);
+    INIT_MATRIX(res, 2, 2);
+
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(multMatrix(a, b, res), MATRIX_DIMENSION_MISMATCH, "DIMENSION_CHECK_MULT_MATRIX multMatrix"));
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(b);
+    FREE_MATRIX(res);
+
+    LOG_INFO("Completed Dim Check Mult Macro Test");
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes dimCheckScaleMacroTest(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Dim Check Scale Macro Test");
+
+    struct matrix* a = NULL;
+    struct matrix* res = NULL;
+
+    INIT_MATRIX(a, 2, 3);
+    INIT_MATRIX(res, 2, 2);
+
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(scaleMatrix(a, res, 2), MATRIX_DIMENSION_MISMATCH,
+                                              "DIMENSION_CHECK_SCALER_MATRIX scaleMatrix"));
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(res);
+
+    LOG_INFO("Completed Dim Check Scale Macro Test");
+    return MATRIX_SUCCESS;
+}
+
 matrixReturnCodes dimensionMismatchTests(bool increasedLogging)
 {
     (void) increasedLogging;
@@ -886,6 +1309,15 @@ matrixReturnCodes dimensionMismatchTests(bool increasedLogging)
         expectReturnCode(inverseMatrix(a, res), MATRIX_DIMENSION_MISMATCH, "inverseMatrix non-square"));
     MATRIX_MATH_RETURN_CHECK(
         expectReturnCode(identityMatrixMinusA(a, res), MATRIX_DIMENSION_MISMATCH, "identityMatrixMinusA non-square"));
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(setIdentityMatrix(a), MATRIX_DIMENSION_MISMATCH, "setIdentityMatrix non-square"));
+    FREE_MATRIX(a);
+    FREE_MATRIX(res);
+
+    INIT_MATRIX(a, 2, 3);
+    INIT_MATRIX(res, 2, 2);
+    MATRIX_MATH_RETURN_CHECK(expectReturnCode(inverseMatrixWithJitter(a, res, (matrixType) 1e-6, 2, (matrixType) 10),
+                                              MATRIX_DIMENSION_MISMATCH, "inverseMatrixWithJitter dimension mismatch"));
     FREE_MATRIX(a);
     FREE_MATRIX(res);
 
