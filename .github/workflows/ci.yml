@@ -36,6 +36,35 @@ jobs:
       - name: Test (Release)
         run: ctest --test-dir build-release -C Release --output-on-failure
 
+  coverage:
+    name: Coverage (Ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install gcovr
+        run: sudo apt-get update && sudo apt-get install -y gcovr
+
+      - name: Configure (Coverage)
+        run: cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON
+
+      - name: Build (Coverage)
+        run: cmake --build build-coverage --config Debug
+
+      - name: Coverage Report
+        run: cmake --build build-coverage --target coverage
+
+      - name: Upload Coverage Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: |
+            build-coverage/*.html
+            build-coverage/*.xml
+          if-no-files-found: error
+
   clang-format:
     name: Clang Format Check
     runs-on: ubuntu-latest
@@ -63,3 +92,11 @@ jobs:
 
       - name: Generate docs
         run: doxygen Doxyfile
+
+      - name: Upload Docs Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: doxygen-docs
+          path: docs/html
+          if-no-files-found: error

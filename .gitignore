@@ -68,3 +68,4 @@ cmake_install.cmake
 Makefile
 
 docs
+coverage.xml

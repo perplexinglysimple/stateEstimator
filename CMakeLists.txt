@@ -149,9 +149,16 @@ install(TARGETS ekfMallocTest ekfStaticInitTest ekfPersonWalkTest ekfMatrixMathT
         DESTINATION bin)
 
 if(ENABLE_COVERAGE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    # Restrict coverage to library sources/headers (exclude tests).
+    set(COVERAGE_FILTER_ARGS
+        --filter "${CMAKE_SOURCE_DIR}/src/"
+        --filter "${CMAKE_SOURCE_DIR}/inc/"
+        --exclude "${CMAKE_SOURCE_DIR}/test/"
+    )
     add_custom_target(coverage
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-        COMMAND gcovr -r ${CMAKE_SOURCE_DIR} --html --html-details -o coverage.html --xml-pretty -o coverage.xml
+        COMMAND gcovr -r ${CMAKE_SOURCE_DIR} ${COVERAGE_FILTER_ARGS} --html --html-details -o coverage.html
+        COMMAND gcovr -r ${CMAKE_SOURCE_DIR} ${COVERAGE_FILTER_ARGS} --xml-pretty -o coverage.xml
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMENT "Running tests and generating coverage report (gcovr)"
     )
