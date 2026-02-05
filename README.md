@@ -1,5 +1,14 @@
 # stateEstimator
-Takes an IMU, MPU-9250, and a XA1110 GPS and throws it in a EKF. This project will be written in C and run eventually on an arduino
+This repository contains a C implementation of an Extended Kalman Filter (EKF) and supporting matrix math utilities,
+plus a suite of tests and tooling for documentation, formatting, and coverage. The core library lives in `src/` and
+`inc/`, with focused unit/integration tests under `test/`. It is intended for embedded/robotics-style sensor fusion
+workflows and includes examples that exercise linear and nonlinear models.
+
+Key folders:
+- `inc/`: Public headers for the EKF and matrix utilities.
+- `src/`: Implementation sources.
+- `test/`: Test binaries for EKF behavior and matrix math.
+- `docs/`: Generated Doxygen output.
 
 ## Notes
 - `EKFPredict` propagates state using `f(x)` and uses `updateAMatrix`/`A` for linear models or to support Jacobian generation.

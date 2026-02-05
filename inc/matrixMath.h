@@ -62,11 +62,17 @@ typedef enum matrixReturnCodes_
  */
 struct matrix
 {
+    /** Row pointers for jagged allocation (NULL for static storage). */
     matrixType** mat;
+    /** Contiguous storage backing for static matrices. */
     matrixType* _mat;
+    /** Non-zero when initialized. */
     int initilized;
+    /** Row count. */
     int row;
+    /** Column count. */
     int col;
+    /** True if matrix was allocated as jagged (row pointers). */
     bool jaggedAlloc;
 };
 
