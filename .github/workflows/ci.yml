@@ -27,6 +27,23 @@ jobs:
       - name: Test (Debug)
         run: ctest --test-dir build-debug -C Debug --output-on-failure
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy filterpy
+
+      - name: Compare filter outputs (Python)
+        run: |
+          python scripts/compare_filterpy.py --csv build-debug/ekf_filterpy_compare.csv --model linear
+          python scripts/compare_filterpy.py --csv build-debug/ekf_filterpy_compare_nonlinear.csv --model nonlinear
+          python scripts/compare_filterpy_boat.py --csv build-debug/ekf_boat_compare.csv
+          python scripts/compare_kalman.py --csv build-debug/kalman_filterpy_compare.csv
+
       - name: Configure (Release)
         run: cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
 

@@ -13,6 +13,7 @@ struct kalmanMatrixes
     struct matrix* F_;
     struct matrix* H_;
     struct matrix* R_;
+    struct matrix* z_;
     struct matrix* Q_;
     struct matrix* F_TRANSPOSE;
     struct matrix* H_TRANSPOSE;

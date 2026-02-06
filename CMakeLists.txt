@@ -50,6 +50,8 @@ add_executable(ekfFilterpyExportNonlinearTest test/ekfFilterpyExportNonlinearTes
 add_executable(ekfMeasurementDimensionTest test/ekfMeasurementDimensionTest.c)
 add_executable(ekfBoatModelTest test/ekfBoatModelTest.c)
 add_executable(ekfBoatExportTest test/ekfBoatExportTest.c)
+add_executable(kalmanFilterTest test/kalmanFilterTest.c)
+add_executable(kalmanFilterExportTest test/kalmanFilterExportTest.c)
 
 if(NOT MSVC)
     set(MATH_LIB m)
@@ -69,8 +71,11 @@ add_test(NAME ekfFilterpyExportNonlinearTest COMMAND $<TARGET_FILE:ekfFilterpyEx
 add_test(NAME ekfMeasurementDimensionTest COMMAND $<TARGET_FILE:ekfMeasurementDimensionTest>)
 add_test(NAME ekfBoatModelTest COMMAND $<TARGET_FILE:ekfBoatModelTest>)
 add_test(NAME ekfBoatExportTest COMMAND $<TARGET_FILE:ekfBoatExportTest> ${CMAKE_BINARY_DIR}/ekf_boat_compare.csv)
+add_test(NAME kalmanFilterTest COMMAND $<TARGET_FILE:kalmanFilterTest>)
+add_test(NAME kalmanFilterExportTest COMMAND $<TARGET_FILE:kalmanFilterExportTest> ${CMAKE_BINARY_DIR}/kalman_filterpy_compare.csv)
 set_tests_properties(ekfBoatModelTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 set_tests_properties(ekfBoatExportTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+set_tests_properties(kalmanFilterExportTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME ekfMatrixMath_copy COMMAND $<TARGET_FILE:ekfMatrixMathTest> copy)
 add_test(NAME ekfMatrixMath_inverse2x2 COMMAND $<TARGET_FILE:ekfMatrixMathTest> inverse2x2)
 add_test(NAME ekfMatrixMath_inverse3x3 COMMAND $<TARGET_FILE:ekfMatrixMathTest> inverse3x3)
@@ -125,6 +130,8 @@ target_link_libraries(ekfFilterpyExportNonlinearTest stateEstimatorLib ${MATH_LI
 target_link_libraries(ekfMeasurementDimensionTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfBoatModelTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfBoatExportTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(kalmanFilterTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(kalmanFilterExportTest stateEstimatorLib ${MATH_LIB})
 
 set(TEST_TARGETS
     ekfMallocTest
@@ -139,6 +146,8 @@ set(TEST_TARGETS
     ekfMeasurementDimensionTest
     ekfBoatModelTest
     ekfBoatExportTest
+    kalmanFilterTest
+    kalmanFilterExportTest
 )
 
 option(FORCE_MATRIX_MATH_DEBUG_CHECKS_FOR_TESTS "Force matrix debug checks when running tests (even in Release)" ON)
@@ -151,7 +160,7 @@ if(FORCE_MATRIX_MATH_DEBUG_CHECKS_FOR_TESTS)
     endforeach()
 endif()
 
-install(TARGETS ekfMallocTest ekfStaticInitTest ekfPersonWalkTest ekfMatrixMathTest ekfJacobianUpdateTest ekfAdvancedUpdateTest ekfFiniteDiffJacobianTest ekfFilterpyExportTest ekfFilterpyExportNonlinearTest ekfMeasurementDimensionTest ekfBoatModelTest ekfBoatExportTest
+install(TARGETS ekfMallocTest ekfStaticInitTest ekfPersonWalkTest ekfMatrixMathTest ekfJacobianUpdateTest ekfAdvancedUpdateTest ekfFiniteDiffJacobianTest ekfFilterpyExportTest ekfFilterpyExportNonlinearTest ekfMeasurementDimensionTest ekfBoatModelTest ekfBoatExportTest kalmanFilterTest kalmanFilterExportTest
         DESTINATION bin)
 
 if(ENABLE_COVERAGE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
@@ -168,4 +177,6 @@ if(ENABLE_COVERAGE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMENT "Running tests and generating coverage report (gcovr)"
     )
+    # Ensure coverage target always builds all test executables before ctest.
+    add_dependencies(coverage ${TEST_TARGETS})
 endif()
