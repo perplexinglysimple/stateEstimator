@@ -7,6 +7,8 @@
 
 void gaussianElimination(struct matrix* a, struct matrix* idenity, struct matrix* res);
 
+#define MATRIX_INVERSE_STACK_MAX_N 16
+
 // Inputs are three matrixes. a and b matrix will be multiplied and the result will be output to res
 matrixReturnCodes multMatrix(struct matrix* a, struct matrix* b, struct matrix* res)
 {
@@ -116,14 +118,8 @@ void printMatrix(struct matrix* a)
             printf("\n");
         for (j = 0; j < a->col; ++j)
         {
-#if defined(_INT)
-            printf("%d", ACCESS_MATRIX(*a, i, j));
-#elif defined(_DOUBLE)
-            printf("%f", ACCESS_MATRIX(*a, i, j));
-#else
-            printf("           Type not defined!");
-            printf("%d", ACCESS_MATRIX(*a, i, j));
-#endif
+            // Cast to double so printing is safe for float/double/int matrixType overrides.
+            printf("%f", (double) ACCESS_MATRIX(*a, i, j));
             if (j < a->col - 1)
             {
                 printf(",\t");
@@ -243,16 +239,47 @@ matrixReturnCodes inverseMatrix(struct matrix* a, struct matrix* res)
         }
     }
 
-    // Inverse for square matrax case
+    // Inverse for square matrix case
     if (a->row == a->col)
     {
-        // We need to make a temp matrix to store the identity matrix
-        // TODO: Make this a static matrix that is in the EKF struct and passed in
-        struct matrix* tempMatrix = NULL;
-        INIT_MATRIX(tempMatrix, a->row, a->col);
-        // Gaussian elimination
-        gaussianElimination(a, tempMatrix, res);
-        FREE_MATRIX(tempMatrix);
+        int n = a->row;
+
+        /*
+         * Fast path for small matrices: avoid heap alloc/free in the hot EKF update loop.
+         * EKF innovation S is 5x5 in this project, so this path is always used there.
+         */
+        if (n <= MATRIX_INVERSE_STACK_MAX_N)
+        {
+            matrixType tempStorage[MATRIX_INVERSE_STACK_MAX_N * MATRIX_INVERSE_STACK_MAX_N];
+            struct matrix tempMatrix;
+            int r;
+            int c;
+
+            tempMatrix.mat = NULL;
+            tempMatrix._mat = tempStorage;
+            tempMatrix.initilized = 1;
+            tempMatrix.row = n;
+            tempMatrix.col = n;
+            tempMatrix.jaggedAlloc = false;
+
+            for (r = 0; r < n; ++r)
+            {
+                for (c = 0; c < n; ++c)
+                {
+                    SET_MATRIX(tempMatrix, r, c, 0);
+                }
+            }
+
+            gaussianElimination(a, &tempMatrix, res);
+        }
+        else
+        {
+            // Fallback for larger matrices.
+            struct matrix* tempMatrix = NULL;
+            INIT_MATRIX(tempMatrix, a->row, a->col);
+            gaussianElimination(a, tempMatrix, res);
+            FREE_MATRIX(tempMatrix);
+        }
     }
     else
     {
@@ -290,14 +317,16 @@ matrixReturnCodes inverseMatrixWithJitter(struct matrix* a, struct matrix* res, 
     }
 
     matrixReturnCodes invRet = MATRIX_ERROR;
-    for (int attempt = 0; attempt < maxAttempts; ++attempt)
+    int attempt;
+    int i;
+    for (attempt = 0; attempt < maxAttempts; ++attempt)
     {
         invRet = inverseMatrix(a, res);
         if (invRet == MATRIX_SUCCESS)
         {
             return MATRIX_SUCCESS;
         }
-        for (int i = 0; i < a->row; ++i)
+        for (i = 0; i < a->row; ++i)
         {
             SET_MATRIX(*a, i, i, ACCESS_MATRIX(*a, i, i) + jitter);
         }
@@ -318,11 +347,13 @@ matrixReturnCodes setIdentityMatrix(struct matrix* a)
         return MATRIX_DIMENSION_MISMATCH;
     }
 
-    for (int i = 0; i < a->row; ++i)
+    int i;
+    int j;
+    for (i = 0; i < a->row; ++i)
     {
-        for (int j = 0; j < a->col; ++j)
+        for (j = 0; j < a->col; ++j)
         {
-            matrixType val = (i == j) ? 1 : 0;
+            matrixType val = (i == j) ? (matrixType) 1 : (matrixType) 0;
             SET_MATRIX(*a, i, j, val);
         }
     }
@@ -429,32 +460,36 @@ void gaussianElimination(struct matrix* a, struct matrix* idenity, struct matrix
     // Copy matrix a to res
     copyMatrix(a, res);
 
+    int i;
+    int j;
+    int k;
+
     // Initialize the inverse matrix as an identity matrix
-    for (int i = 0; i < res->col; ++i)
+    for (i = 0; i < res->col; ++i)
     {
-        for (int j = 0; j < res->col; ++j)
+        for (j = 0; j < res->col; ++j)
         {
-            SET_MATRIX(*idenity, i, j, (i == j) ? 1 : 0);
+            SET_MATRIX(*idenity, i, j, (i == j) ? (matrixType) 1 : (matrixType) 0);
         }
     }
 
     // Gaussian elimination
-    for (int i = 0; i < a->row; ++i)
+    for (i = 0; i < a->row; ++i)
     {
         temp = ACCESS_MATRIX(*res, i, i);
-        for (int j = 0; j < a->row; ++j)
+        for (j = 0; j < a->row; ++j)
         {
             SET_MATRIX(*res, i, j, ACCESS_MATRIX(*res, i, j) / temp);
             SET_MATRIX(*idenity, i, j, ACCESS_MATRIX(*idenity, i, j) / temp);
         }
 
         // Subtract the current row from all the other rows
-        for (int k = 0; k < a->row; ++k)
+        for (k = 0; k < a->row; ++k)
         {
             if (k != i)
             {
                 ratio = ACCESS_MATRIX(*res, k, i);
-                for (int j = 0; j < a->row; ++j)
+                for (j = 0; j < a->row; ++j)
                 {
                     SET_MATRIX(*res, k, j, ACCESS_MATRIX(*res, k, j) - ratio * ACCESS_MATRIX(*res, i, j));
                     SET_MATRIX(*idenity, k, j, ACCESS_MATRIX(*idenity, k, j) - ratio * ACCESS_MATRIX(*idenity, i, j));

@@ -13,8 +13,11 @@
 #include "utils.h"
 
 /** @brief Numeric precision used throughout the EKF math layer. */
-// CHANGE THIS TO FLOAT OR DOUBLE DEPENDING ON YOUR NEEDS
-typedef double ekfType;
+// Defaults to double. Override with -DEKF_TYPE=float (or another numeric type).
+#ifndef EKF_TYPE
+#define EKF_TYPE double
+#endif
+typedef EKF_TYPE ekfType;
 
 // Enable extra matrix math checks in debug builds (disabled in release).
 // Define MATRIX_MATH_DEBUG_CHECKS=1 to force-enable in any build.
@@ -30,14 +33,6 @@ typedef double ekfType;
 #define MATRIXTYPE
 typedef ekfType matrixType;
 #define _DOUBLE
-#endif
-
-#ifndef MATRIXTYPE
-#define MATRIXTYPE
-typedef int matrixType;
-// This is the type so the print statements wont bug out
-// This can be int or double
-#define _INT
 #endif
 
 /** @brief Return codes for matrix operations. */

@@ -8,7 +8,16 @@
 #include <string.h>
 #include <stdio.h>
 
-// Single printf path avoids variadic dispatch issues across compilers.
+/*
+ * Compile-time logging control for EKF/matrix library internals.
+ * Default is enabled for easier bring-up/debug.
+ * Set -DEKF_ENABLE_LOGS=1 in compiler flags to enable logging.
+ */
+#ifndef EKF_ENABLE_LOGS
+#define EKF_ENABLE_LOGS 0
+#endif
+
+#if EKF_ENABLE_LOGS
 #define LOG_MSG_PRINTF(level, ...)                                                                                     \
     do                                                                                                                 \
     {                                                                                                                  \
@@ -16,11 +25,19 @@
         printf(__VA_ARGS__);                                                                                           \
         printf("\n");                                                                                                  \
     } while (0)
+#else
+#define LOG_MSG_PRINTF(level, ...)                                                                                     \
+    do                                                                                                                 \
+    {                                                                                                                  \
+    } while (0)
+#endif
 
 #ifndef __FILENAME__
 #ifdef __linux__
 #include <libgen.h>
 #define GET_FILENAME(path) basename(path)
+#elif defined(__TI_COMPILER_VERSION__)
+#define GET_FILENAME(path) (path)
 #elif _WIN32
 #include <windows.h>
 #include <tchar.h>
