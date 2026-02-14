@@ -182,7 +182,8 @@ int kalmanFilterUpdate(struct kalmanMatrixes* k)
 
     // residual = z - Hx (store back into z_)
     KALMAN_RETURN_CHECK(multMatrix(k->H_, k->x_, k->TEMP_X_));
-    for (int i = 0; i < k->z_->row; ++i)
+    int i;
+    for (i = 0; i < k->z_->row; ++i)
     {
         matrixType residual = ACCESS_MATRIX(*k->z_, i, 0) - ACCESS_MATRIX(*k->TEMP_X_, i, 0);
         SET_MATRIX(*k->z_, i, 0, residual);
@@ -190,7 +191,7 @@ int kalmanFilterUpdate(struct kalmanMatrixes* k)
 
     // x = x + K * residual
     KALMAN_RETURN_CHECK(multMatrix(k->TEMP_FP_, k->z_, k->TEMP_X_));
-    for (int i = 0; i < k->x_->row; ++i)
+    for (i = 0; i < k->x_->row; ++i)
     {
         matrixType updated = ACCESS_MATRIX(*k->x_, i, 0) + ACCESS_MATRIX(*k->TEMP_X_, i, 0);
         SET_MATRIX(*k->x_, i, 0, updated);
