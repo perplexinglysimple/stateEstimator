@@ -26,6 +26,8 @@ void calculateJacobian(EKFMatrix* x, EKFMatrix* _x_predicted, EKFMatrix* Jacobia
 // See EKF.h for documentation
 EKFReturnCodes EKFInit(EKFState* ekf, EKFConfigOptions* options)
 {
+    int numMeasurements;
+
     LOG_FUNCTION();
 
     NULL_CHECK_EKF(ekf);
@@ -45,7 +47,7 @@ EKFReturnCodes EKFInit(EKFState* ekf, EKFConfigOptions* options)
     EKF_NULL_CHECK_MATRIX(ekf->R);
     EKF_NULL_CHECK_MATRIX(ekf->A);
 
-    int numMeasurements = options->numberOfMeasurements;
+    numMeasurements = options->numberOfMeasurements;
     if (numMeasurements <= 0)
     {
         numMeasurements = options->n;
@@ -229,6 +231,8 @@ EKFReturnCodes EKFPredict(EKFState* ekf, double time, void* userData)
 // See EKF.h for documentation
 EKFReturnCodes EKFUpdate(EKFState* ekf, EKFMeasurement* measurement)
 {
+    matrixReturnCodes invRet;
+
     LOG_FUNCTION();
 
     NULL_CHECK_EKF(ekf);
@@ -259,7 +263,7 @@ EKFReturnCodes EKFUpdate(EKFState* ekf, EKFMeasurement* measurement)
     MATRIX_MATH_RETURN_CHECK(copyMatrix(ekf->_TEMP6, ekf->_S));
 
     // Invert S with jitter if needed
-    matrixReturnCodes invRet = inverseMatrixWithJitter(ekf->_S, ekf->_TEMP6, (matrixType) 1e-6, 3, (matrixType) 100);
+    invRet = inverseMatrixWithJitter(ekf->_S, ekf->_TEMP6, (matrixType) 1e-6, 3, (matrixType) 100);
     if (invRet != MATRIX_SUCCESS)
     {
         LOG_ERROR("EKFUpdate() failed to invert innovation matrix S.");
@@ -301,13 +305,13 @@ EKFReturnCodes EKFUpdate(EKFState* ekf, EKFMeasurement* measurement)
 void calculateJacobian(EKFMatrix* x, EKFMatrix* _x_predicted, EKFMatrix* Jacobian, EKFStateTransitionFunction f,
                        EKFState* ekf, EKFMatrix* baseline, void* userData)
 {
-    LOG_FUNCTION();
-
     int i, j;
     matrixType temp;
     matrixType epislon = EPSILON;
     int numOfStates = x->row;
     int numOutputs = Jacobian->row;
+
+    LOG_FUNCTION();
     // Compute baseline f(x) into provided baseline buffer.
     f(x, baseline, ekf, userData);
     for (i = 0; i < numOfStates; ++i)

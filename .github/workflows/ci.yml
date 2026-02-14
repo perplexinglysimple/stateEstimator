@@ -5,6 +5,19 @@ on:
   pull_request:
 
 jobs:
+  c89-compat:
+    name: C89 Compatibility (Library)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure (gnu89 compatibility)
+        run: cmake -S . -B build-gnu89 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-std=gnu89 -Werror -Wdeclaration-after-statement"
+
+      - name: Build Library (gnu89 compatibility)
+        run: cmake --build build-gnu89 --target stateEstimatorLib
+
   build-test:
     name: Build and Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

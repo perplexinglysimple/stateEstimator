@@ -144,6 +144,9 @@ int kalmanFilterPredict(struct kalmanMatrixes* k)
 
 int kalmanFilterUpdate(struct kalmanMatrixes* k)
 {
+    matrixReturnCodes invRet;
+    int i;
+
     if (k == NULL)
     {
         return MATRIX_NULL_POINTER;
@@ -169,8 +172,7 @@ int kalmanFilterUpdate(struct kalmanMatrixes* k)
     KALMAN_RETURN_CHECK(addMatrix(k->TEMP_FPFT_, k->R_, k->TEMP_FP_));
 
     // S^-1
-    matrixReturnCodes invRet =
-        inverseMatrixWithJitter(k->TEMP_FP_, k->TEMP_FPFT_, (matrixType) 1e-6, 3, (matrixType) 100);
+    invRet = inverseMatrixWithJitter(k->TEMP_FP_, k->TEMP_FPFT_, (matrixType) 1e-6, 3, (matrixType) 100);
     if (invRet != MATRIX_SUCCESS)
     {
         LOG_ERROR("kalmanFilterUpdate failed to invert innovation matrix S.");
@@ -182,7 +184,7 @@ int kalmanFilterUpdate(struct kalmanMatrixes* k)
 
     // residual = z - Hx (store back into z_)
     KALMAN_RETURN_CHECK(multMatrix(k->H_, k->x_, k->TEMP_X_));
-    for (int i = 0; i < k->z_->row; ++i)
+    for (i = 0; i < k->z_->row; ++i)
     {
         matrixType residual = ACCESS_MATRIX(*k->z_, i, 0) - ACCESS_MATRIX(*k->TEMP_X_, i, 0);
         SET_MATRIX(*k->z_, i, 0, residual);
@@ -190,7 +192,7 @@ int kalmanFilterUpdate(struct kalmanMatrixes* k)
 
     // x = x + K * residual
     KALMAN_RETURN_CHECK(multMatrix(k->TEMP_FP_, k->z_, k->TEMP_X_));
-    for (int i = 0; i < k->x_->row; ++i)
+    for (i = 0; i < k->x_->row; ++i)
     {
         matrixType updated = ACCESS_MATRIX(*k->x_, i, 0) + ACCESS_MATRIX(*k->TEMP_X_, i, 0);
         SET_MATRIX(*k->x_, i, 0, updated);

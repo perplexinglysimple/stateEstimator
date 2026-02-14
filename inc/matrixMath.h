@@ -75,6 +75,7 @@ struct matrix
 #define INIT_MATRIX(ptr, _row, _col)                                                                                   \
     do                                                                                                                 \
     {                                                                                                                  \
+        int _mm_init_i, _mm_init_j;                                                                                    \
         FREE_MATRIX(ptr);                                                                                              \
         ptr = malloc(1 * sizeof(struct matrix));                                                                       \
         ptr->col = _col;                                                                                               \
@@ -82,14 +83,13 @@ struct matrix
         ptr->initilized = 1;                                                                                           \
         ptr->mat = NULL;                                                                                               \
         ptr->jaggedAlloc = true;                                                                                       \
-        int _i, _j;                                                                                                    \
         ptr->mat = malloc(_row * sizeof(matrixType*));                                                                 \
-        for (_i = 0; _i < _row; ++_i)                                                                                  \
+        for (_mm_init_i = 0; _mm_init_i < _row; ++_mm_init_i)                                                          \
         {                                                                                                              \
-            ptr->mat[_i] = malloc(_col * sizeof(matrixType));                                                          \
-            for (_j = 0; _j < _col; ++_j)                                                                              \
+            ptr->mat[_mm_init_i] = malloc(_col * sizeof(matrixType));                                                  \
+            for (_mm_init_j = 0; _mm_init_j < _col; ++_mm_init_j)                                                      \
             {                                                                                                          \
-                ptr->mat[_i][_j] = 0;                                                                                  \
+                ptr->mat[_mm_init_i][_mm_init_j] = 0;                                                                  \
             }                                                                                                          \
         }                                                                                                              \
     } while (0)
@@ -175,14 +175,14 @@ struct matrix
     {                                                                                                                  \
         if (ptr != NULL)                                                                                               \
         {                                                                                                              \
-            int row = ptr->row;                                                                                        \
+            int _mm_free_row = ptr->row;                                                                               \
+            int _mm_free_i;                                                                                            \
             ptr->col = 0;                                                                                              \
             ptr->row = 0;                                                                                              \
             ptr->initilized = 0;                                                                                       \
-            int _i;                                                                                                    \
-            for (_i = 0; _i < row; ++_i)                                                                               \
+            for (_mm_free_i = 0; _mm_free_i < _mm_free_row; ++_mm_free_i)                                              \
             {                                                                                                          \
-                free(ptr->mat[_i]);                                                                                    \
+                free(ptr->mat[_mm_free_i]);                                                                            \
             }                                                                                                          \
             free(ptr->mat);                                                                                            \
             ptr->mat = NULL;                                                                                           \

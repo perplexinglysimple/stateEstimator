@@ -20,7 +20,7 @@ typedef void (*EKFMeasurementFunction)(EKFMatrix* x, EKFMatrix* z, EKFState* ekf
 // Jacobian function prototype (fills J based on state x)
 typedef void (*EKFJacobianFunction)(EKFMatrix* x, EKFMatrix* J, EKFState* ekf, void* userData);
 
-typedef struct EKFState_
+struct EKFState_
 {
     /** State vector (n x 1). */
     EKFMatrix* x;
@@ -86,7 +86,7 @@ typedef struct EKFState_
     bool useFiniteDifferenceJacobian;
     /** True if EKF matrices were allocated with malloc and must be freed in cleanup. */
     bool mallocFlag;
-} EKFState;
+};
 
 typedef struct EKFConfigOptions_
 {
