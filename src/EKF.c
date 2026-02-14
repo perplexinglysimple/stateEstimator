@@ -26,6 +26,8 @@ void calculateJacobian(EKFMatrix* x, EKFMatrix* _x_predicted, EKFMatrix* Jacobia
 // See EKF.h for documentation
 EKFReturnCodes EKFInit(EKFState* ekf, EKFConfigOptions* options)
 {
+    int numMeasurements;
+
     LOG_FUNCTION();
 
     NULL_CHECK_EKF(ekf);
@@ -45,7 +47,7 @@ EKFReturnCodes EKFInit(EKFState* ekf, EKFConfigOptions* options)
     EKF_NULL_CHECK_MATRIX(ekf->R);
     EKF_NULL_CHECK_MATRIX(ekf->A);
 
-    int numMeasurements = options->numberOfMeasurements;
+    numMeasurements = options->numberOfMeasurements;
     if (numMeasurements <= 0)
     {
         numMeasurements = options->n;
