@@ -7,6 +7,7 @@ static void IdentityUpdateA(EKFMatrix* A, EKFMatrix* x, struct EKFState_* ekf, d
 
 static int assertNear(double actual, double expected, double eps, const char* msg)
 {
+    (void) msg;
     if (fabs(actual - expected) > eps)
     {
         LOG_ERROR("%s: expected %.6f got %.6f", msg, expected, actual);
