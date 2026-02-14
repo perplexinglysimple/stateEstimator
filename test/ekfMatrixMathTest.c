@@ -817,6 +817,7 @@ matrixReturnCodes copyTest(bool increasedLogging)
 
 static matrixReturnCodes expectReturnCode(matrixReturnCodes got, matrixReturnCodes expected, const char* testName)
 {
+    (void) testName;
     if (got != expected)
     {
         LOG_ERROR("Expected %d but got %d in %s", expected, got, testName);

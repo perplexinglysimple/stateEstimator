@@ -23,6 +23,7 @@
 
 static matrixReturnCodes expectReturnCode(matrixReturnCodes got, matrixReturnCodes expected, const char* msg)
 {
+    (void) msg;
     if (got != expected)
     {
         LOG_ERROR("%s (got %d, expected %d)", msg, got, expected);
@@ -33,6 +34,7 @@ static matrixReturnCodes expectReturnCode(matrixReturnCodes got, matrixReturnCod
 
 static matrixReturnCodes expectScalarApprox(matrixType got, matrixType expected, matrixType eps, const char* msg)
 {
+    (void) msg;
     if (fabs((double) (got - expected)) > (double) eps)
     {
         LOG_ERROR("%s (got %.10f, expected %.10f)", msg, (double) got, (double) expected);
