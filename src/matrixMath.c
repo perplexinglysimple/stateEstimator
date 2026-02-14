@@ -12,6 +12,8 @@ void gaussianElimination(struct matrix* a, struct matrix* idenity, struct matrix
 // Inputs are three matrixes. a and b matrix will be multiplied and the result will be output to res
 matrixReturnCodes multMatrix(struct matrix* a, struct matrix* b, struct matrix* res)
 {
+    int i, j, k;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -29,7 +31,6 @@ matrixReturnCodes multMatrix(struct matrix* a, struct matrix* b, struct matrix* 
     NAN_CHECK_MATRIX(a);
     NAN_CHECK_MATRIX(b);
 
-    int i, j, k;
     ZEROIZE_MATRIX(*res, i, j);
 
     // Do the multiplication
@@ -48,6 +49,8 @@ matrixReturnCodes multMatrix(struct matrix* a, struct matrix* b, struct matrix* 
 
 matrixReturnCodes scaleMatrix(struct matrix* a, struct matrix* res, matrixType scaler)
 {
+    int i, j;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -60,7 +63,6 @@ matrixReturnCodes scaleMatrix(struct matrix* a, struct matrix* res, matrixType s
 
     NAN_CHECK_MATRIX(a);
 
-    int i, j;
     for (i = 0; i < a->row; ++i)
     {
         for (j = 0; j < a->col; ++j)
@@ -73,6 +75,8 @@ matrixReturnCodes scaleMatrix(struct matrix* a, struct matrix* res, matrixType s
 
 matrixReturnCodes addMatrix(struct matrix* a, struct matrix* b, struct matrix* res)
 {
+    int arow, acol;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -90,7 +94,6 @@ matrixReturnCodes addMatrix(struct matrix* a, struct matrix* b, struct matrix* r
     NAN_CHECK_MATRIX(a);
     NAN_CHECK_MATRIX(b);
 
-    int arow, acol;
     for (arow = 0; arow < a->row; ++arow)
     {
         for (acol = 0; acol < a->col; ++acol)
@@ -104,6 +107,8 @@ matrixReturnCodes addMatrix(struct matrix* a, struct matrix* b, struct matrix* r
 
 void printMatrix(struct matrix* a)
 {
+    int i, j;
+
     LOG_FUNCTION();
 
     if (a == NULL || !a->initilized)
@@ -111,7 +116,6 @@ void printMatrix(struct matrix* a)
         printf("Trying to print a uninitilized matrix");
         return;
     }
-    int i, j;
     for (i = 0; i < a->row; ++i)
     {
         if (i > 0)
@@ -131,6 +135,8 @@ void printMatrix(struct matrix* a)
 
 matrixReturnCodes compareMatrieces(struct matrix* a, struct matrix* b)
 {
+    int i, j;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -142,7 +148,6 @@ matrixReturnCodes compareMatrieces(struct matrix* a, struct matrix* b)
     {
         return MATRIX_DIMENSION_MISMATCH;
     }
-    int i, j;
     for (i = 0; i < a->row; ++i)
     {
         for (j = 0; j < a->col; ++j)
@@ -158,6 +163,8 @@ matrixReturnCodes compareMatrieces(struct matrix* a, struct matrix* b)
 
 matrixReturnCodes transposeMatrix(struct matrix* a, struct matrix* b)
 {
+    int i, j;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -173,7 +180,6 @@ matrixReturnCodes transposeMatrix(struct matrix* a, struct matrix* b)
     {
         return MATRIX_DIMENSION_MISMATCH;
     }
-    int i, j;
     for (i = 0; i < a->row; ++i)
     {
         for (j = 0; j < a->col; ++j)
@@ -186,6 +192,8 @@ matrixReturnCodes transposeMatrix(struct matrix* a, struct matrix* b)
 
 matrixReturnCodes subMatrix(struct matrix* a, struct matrix* b, struct matrix* res)
 {
+    int arow, acol;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -203,7 +211,6 @@ matrixReturnCodes subMatrix(struct matrix* a, struct matrix* b, struct matrix* r
     NAN_CHECK_MATRIX(a);
     NAN_CHECK_MATRIX(b);
 
-    int arow, acol;
     for (arow = 0; arow < a->row; ++arow)
     {
         for (acol = 0; acol < a->col; ++acol)
@@ -217,6 +224,8 @@ matrixReturnCodes subMatrix(struct matrix* a, struct matrix* b, struct matrix* r
 
 matrixReturnCodes inverseMatrix(struct matrix* a, struct matrix* res)
 {
+    int i, j;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -230,7 +239,6 @@ matrixReturnCodes inverseMatrix(struct matrix* a, struct matrix* res)
     NAN_CHECK_MATRIX(a);
 
     // Zero out the result matrix
-    int i, j;
     for (i = 0; i < res->row; ++i)
     {
         for (j = 0; j < res->col; ++j)
@@ -295,6 +303,10 @@ matrixReturnCodes inverseMatrix(struct matrix* a, struct matrix* res)
 matrixReturnCodes inverseMatrixWithJitter(struct matrix* a, struct matrix* res, matrixType jitter, int maxAttempts,
                                           matrixType jitterScale)
 {
+    matrixReturnCodes invRet = MATRIX_ERROR;
+    int attempt;
+    int i;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -316,9 +328,6 @@ matrixReturnCodes inverseMatrixWithJitter(struct matrix* a, struct matrix* res, 
         return MATRIX_ERROR;
     }
 
-    matrixReturnCodes invRet = MATRIX_ERROR;
-    int attempt;
-    int i;
     for (attempt = 0; attempt < maxAttempts; ++attempt)
     {
         invRet = inverseMatrix(a, res);
@@ -337,6 +346,9 @@ matrixReturnCodes inverseMatrixWithJitter(struct matrix* a, struct matrix* res, 
 
 matrixReturnCodes setIdentityMatrix(struct matrix* a)
 {
+    int i;
+    int j;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -347,8 +359,6 @@ matrixReturnCodes setIdentityMatrix(struct matrix* a)
         return MATRIX_DIMENSION_MISMATCH;
     }
 
-    int i;
-    int j;
     for (i = 0; i < a->row; ++i)
     {
         for (j = 0; j < a->col; ++j)
@@ -399,6 +409,8 @@ matrixReturnCodes identityMatrixMinusA(struct matrix* a, struct matrix* res)
 
 matrixReturnCodes copyMatrix(struct matrix* a, struct matrix* res)
 {
+    int i, j;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
@@ -413,7 +425,6 @@ matrixReturnCodes copyMatrix(struct matrix* a, struct matrix* res)
     {
         return MATRIX_DIMENSION_MISMATCH;
     }
-    int i, j;
     for (i = 0; i < a->row; ++i)
     {
         for (j = 0; j < a->col; ++j)
@@ -426,13 +437,14 @@ matrixReturnCodes copyMatrix(struct matrix* a, struct matrix* res)
 
 matrixReturnCodes nanCheckMatrix(struct matrix* a)
 {
+    int i, j;
+
     LOG_FUNCTION();
 
     NULL_CHECK_MATRIX(a);
 
     NON_INIT_CHECK_MATRIX(a);
 
-    int i, j;
     for (i = 0; i < a->row; ++i)
     {
         for (j = 0; j < a->col; ++j)
@@ -452,17 +464,16 @@ matrixReturnCodes nanCheckMatrix(struct matrix* a)
 
 void gaussianElimination(struct matrix* a, struct matrix* idenity, struct matrix* res)
 {
-    LOG_FUNCTION();
-
     matrixType temp;
     matrixType ratio;
-
-    // Copy matrix a to res
-    copyMatrix(a, res);
-
     int i;
     int j;
     int k;
+
+    LOG_FUNCTION();
+
+    // Copy matrix a to res
+    copyMatrix(a, res);
 
     // Initialize the inverse matrix as an identity matrix
     for (i = 0; i < res->col; ++i)
