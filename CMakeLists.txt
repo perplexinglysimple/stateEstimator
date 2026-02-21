@@ -54,6 +54,7 @@ add_executable(ekfBoatModelTest test/ekfBoatModelTest.c)
 add_executable(ekfBoatExportTest test/ekfBoatExportTest.c)
 add_executable(kalmanFilterTest test/kalmanFilterTest.c)
 add_executable(kalmanFilterExportTest test/kalmanFilterExportTest.c)
+add_executable(realDataEkfCsvRunner RealDataValidation/ekf_ref_validation/c_target_ekf_runner.c)
 
 if(NOT MSVC)
     set(MATH_LIB m)
@@ -142,6 +143,7 @@ target_link_libraries(ekfBoatModelTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfBoatExportTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(kalmanFilterTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(kalmanFilterExportTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(realDataEkfCsvRunner stateEstimatorLib ${MATH_LIB})
 
 set(TEST_TARGETS
     ekfMallocTest
@@ -174,6 +176,7 @@ endif()
 
 install(TARGETS ekfMallocTest ekfStaticInitTest ekfPersonWalkTest ekfMatrixMathTest ekfJacobianUpdateTest ekfAdvancedUpdateTest ekfFiniteDiffJacobianTest ekfFilterpyExportTest ekfFilterpyExportNonlinearTest ekfMeasurementDimensionTest ekfPredictUpdateAMatrixNullTest ekfInitAliasAndUpdateUserDataTest ekfBoatModelTest ekfBoatExportTest kalmanFilterTest kalmanFilterExportTest
         DESTINATION bin)
+install(TARGETS realDataEkfCsvRunner DESTINATION bin)
 
 if(ENABLE_COVERAGE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     # Restrict coverage to library sources/headers (exclude tests).
