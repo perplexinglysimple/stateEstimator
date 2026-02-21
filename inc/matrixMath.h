@@ -49,6 +49,15 @@ typedef enum matrixReturnCodes_
     MATRIX_INF_FAILURE = -8,
 } matrixReturnCodes;
 
+/** @brief Inversion method selector for square matrices. */
+typedef enum matrixInversionMethod_
+{
+    MATRIX_INVERSE_AUTO = 0,
+    MATRIX_INVERSE_GAUSS_JORDAN = 1,
+    MATRIX_INVERSE_LU = 2,
+    MATRIX_INVERSE_CHOLESKY = 3,
+} matrixInversionMethod;
+
 /**
  * @brief Dense matrix container.
  *
@@ -346,8 +355,30 @@ matrixReturnCodes subMatrix(struct matrix* a, struct matrix* b, struct matrix* r
 /**
  * @brief Invert a matrix (res = a^-1).
  * @note Not safe for in-place usage. res must not alias a.
+ * @note Uses MATRIX_INVERSE_AUTO and falls back across methods.
  */
 matrixReturnCodes inverseMatrix(struct matrix* a, struct matrix* res);
+
+/**
+ * @brief Invert matrix using an explicit method.
+ * @note Not safe for in-place usage. res must not alias a.
+ */
+matrixReturnCodes inverseMatrixByMethod(struct matrix* a, struct matrix* res, matrixInversionMethod method);
+
+/**
+ * @brief Invert square matrix using Gauss-Jordan elimination with pivoting.
+ */
+matrixReturnCodes inverseMatrixGaussJordan(struct matrix* a, struct matrix* res);
+
+/**
+ * @brief Invert square matrix via LU decomposition with partial pivoting.
+ */
+matrixReturnCodes inverseMatrixLU(struct matrix* a, struct matrix* res);
+
+/**
+ * @brief Invert symmetric positive definite matrix via Cholesky decomposition.
+ */
+matrixReturnCodes inverseMatrixCholesky(struct matrix* a, struct matrix* res);
 
 /**
  * @brief Invert a matrix with diagonal jitter retry (res = a^-1).

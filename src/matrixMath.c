@@ -5,10 +5,6 @@
 // isnan check
 #include <math.h>
 
-void gaussianElimination(struct matrix* a, struct matrix* idenity, struct matrix* res);
-
-#define MATRIX_INVERSE_STACK_MAX_N 16
-
 // Inputs are three matrixes. a and b matrix will be multiplied and the result will be output to res
 matrixReturnCodes multMatrix(struct matrix* a, struct matrix* b, struct matrix* res)
 {
@@ -224,80 +220,9 @@ matrixReturnCodes subMatrix(struct matrix* a, struct matrix* b, struct matrix* r
 
 matrixReturnCodes inverseMatrix(struct matrix* a, struct matrix* res)
 {
-    int i, j;
-
     LOG_FUNCTION();
 
-    NULL_CHECK_MATRIX(a);
-
-    NULL_CHECK_MATRIX_RES(res);
-    NO_ALIAS_CHECK_MATRIX2(a, res);
-
-    NON_INIT_CHECK_MATRIX(a);
-    NON_INIT_CHECK_MATRIX(res);
-
-    NAN_CHECK_MATRIX(a);
-
-    // Zero out the result matrix
-    for (i = 0; i < res->row; ++i)
-    {
-        for (j = 0; j < res->col; ++j)
-        {
-            SET_MATRIX(*res, i, j, 0);
-        }
-    }
-
-    // Inverse for square matrix case
-    if (a->row == a->col)
-    {
-        int n = a->row;
-
-        /*
-         * Fast path for small matrices: avoid heap alloc/free in the hot EKF update loop.
-         * EKF innovation S is 5x5 in this project, so this path is always used there.
-         */
-        if (n <= MATRIX_INVERSE_STACK_MAX_N)
-        {
-            matrixType tempStorage[MATRIX_INVERSE_STACK_MAX_N * MATRIX_INVERSE_STACK_MAX_N];
-            struct matrix tempMatrix;
-            int r;
-            int c;
-
-            tempMatrix.mat = NULL;
-            tempMatrix._mat = tempStorage;
-            tempMatrix.initilized = 1;
-            tempMatrix.row = n;
-            tempMatrix.col = n;
-            tempMatrix.jaggedAlloc = false;
-
-            for (r = 0; r < n; ++r)
-            {
-                for (c = 0; c < n; ++c)
-                {
-                    SET_MATRIX(tempMatrix, r, c, 0);
-                }
-            }
-
-            gaussianElimination(a, &tempMatrix, res);
-        }
-        else
-        {
-            // Fallback for larger matrices.
-            struct matrix* tempMatrix = NULL;
-            INIT_MATRIX(tempMatrix, a->row, a->col);
-            gaussianElimination(a, tempMatrix, res);
-            FREE_MATRIX(tempMatrix);
-        }
-    }
-    else
-    {
-        // TODO: Implement inverse for non square matrix
-        return MATRIX_DIMENSION_MISMATCH;
-    }
-
-    NAN_CHECK_MATRIX(res);
-
-    return MATRIX_SUCCESS;
+    return inverseMatrixByMethod(a, res, MATRIX_INVERSE_AUTO);
 }
 
 matrixReturnCodes inverseMatrixWithJitter(struct matrix* a, struct matrix* res, matrixType jitter, int maxAttempts,
@@ -460,55 +385,4 @@ matrixReturnCodes nanCheckMatrix(struct matrix* a)
         }
     }
     return MATRIX_SUCCESS;
-}
-
-void gaussianElimination(struct matrix* a, struct matrix* idenity, struct matrix* res)
-{
-    matrixType temp;
-    matrixType ratio;
-    int i;
-    int j;
-    int k;
-
-    LOG_FUNCTION();
-
-    // Copy matrix a to res
-    copyMatrix(a, res);
-
-    // Initialize the inverse matrix as an identity matrix
-    for (i = 0; i < res->col; ++i)
-    {
-        for (j = 0; j < res->col; ++j)
-        {
-            SET_MATRIX(*idenity, i, j, (i == j) ? (matrixType) 1 : (matrixType) 0);
-        }
-    }
-
-    // Gaussian elimination
-    for (i = 0; i < a->row; ++i)
-    {
-        temp = ACCESS_MATRIX(*res, i, i);
-        for (j = 0; j < a->row; ++j)
-        {
-            SET_MATRIX(*res, i, j, ACCESS_MATRIX(*res, i, j) / temp);
-            SET_MATRIX(*idenity, i, j, ACCESS_MATRIX(*idenity, i, j) / temp);
-        }
-
-        // Subtract the current row from all the other rows
-        for (k = 0; k < a->row; ++k)
-        {
-            if (k != i)
-            {
-                ratio = ACCESS_MATRIX(*res, k, i);
-                for (j = 0; j < a->row; ++j)
-                {
-                    SET_MATRIX(*res, k, j, ACCESS_MATRIX(*res, k, j) - ratio * ACCESS_MATRIX(*res, i, j));
-                    SET_MATRIX(*idenity, k, j, ACCESS_MATRIX(*idenity, k, j) - ratio * ACCESS_MATRIX(*idenity, i, j));
-                }
-            }
-        }
-    }
-
-    // Copy the inverse matrix to res
-    copyMatrix(idenity, res);
 }

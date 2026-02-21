@@ -1,4 +1,6 @@
 #include "EKF.h"
+#include <float.h>
+#include <math.h>
 
 // Bridge matrix null checks into EKF return codes.
 static inline matrixReturnCodes ekfMatrixNullCheck(struct matrix* ptr)
@@ -21,17 +23,49 @@ static inline matrixReturnCodes ekfMatrixNullCheck(struct matrix* ptr)
 /// @brief Calculate the Jacobian matrix of a function with respect to the state variables.
 void calculateJacobian(EKFMatrix* x, EKFMatrix* _x_predicted, EKFMatrix* Jacobian, EKFStateTransitionFunction f,
                        EKFState* ekf, EKFMatrix* baseline, void* userData);
+static matrixType finiteDifferenceStep(matrixType value);
 
 // ------------------------- Public Functions ------------------------- //
 // See EKF.h for documentation
 EKFReturnCodes EKFInit(EKFState* ekf, EKFConfigOptions* options)
 {
+    int n;
     int numMeasurements;
 
     LOG_FUNCTION();
 
     NULL_CHECK_EKF(ekf);
     NULL_CHECK_EKF(options);
+
+    // Hard pointer checks (independent of MATRIX_MATH_DEBUG_CHECKS).
+    if (options->x0 == NULL || options->P0 == NULL || options->Q == NULL || options->R == NULL || options->A == NULL)
+    {
+        LOG_ERROR("EKFInit() failed because one or more option matrices are NULL.");
+        return EKF_NULL_POINTER;
+    }
+    if (ekf->x == NULL || ekf->P == NULL || ekf->Q == NULL || ekf->R == NULL || ekf->A == NULL)
+    {
+        LOG_ERROR("EKFInit() failed because one or more EKF matrices are NULL.");
+        return EKF_NULL_POINTER;
+    }
+    if (options->f == NULL || options->h == NULL)
+    {
+        LOG_ERROR("EKFInit() failed because f or h callback is NULL.");
+        return EKF_NULL_POINTER;
+    }
+
+    if (options->n > 0 && options->numberOfStates > 0 && options->n != options->numberOfStates)
+    {
+        LOG_ERROR("EKFInit() failed because n and numberOfStates disagree.");
+        return EKF_ERROR;
+    }
+
+    n = options->n > 0 ? options->n : options->numberOfStates;
+    if (n <= 0)
+    {
+        LOG_ERROR("EKFInit() failed because state dimension n is not set.");
+        return EKF_ERROR;
+    }
 
     // Check to see if the options struct is initialized.
     EKF_NULL_CHECK_MATRIX(options->x0);
@@ -47,30 +81,28 @@ EKFReturnCodes EKFInit(EKFState* ekf, EKFConfigOptions* options)
     EKF_NULL_CHECK_MATRIX(ekf->R);
     EKF_NULL_CHECK_MATRIX(ekf->A);
 
-    numMeasurements = options->numberOfMeasurements;
+    numMeasurements = options->numberOfMeasurements > 0 ? options->numberOfMeasurements : n;
     if (numMeasurements <= 0)
     {
-        numMeasurements = options->n;
-    }
-    if (numMeasurements <= 0)
-    {
-        LOG_ERROR("EKFInit() failed because numberOfMeasurements and n are not set.");
+        LOG_ERROR("EKFInit() failed because numberOfMeasurements is invalid.");
         return EKF_ERROR;
     }
+    options->n = n;
+    options->numberOfStates = n;
     options->numberOfMeasurements = numMeasurements;
 
     // Check to see if x, P, Q, R, and A are the correct size.
-    if (options->x0->row != options->n || options->x0->col != 1)
+    if (options->x0->row != n || options->x0->col != 1)
     {
         LOG_ERROR("EKFInit() failed because the x0 matrix is not the correct size.");
         return EKF_ERROR;
     }
-    if (options->P0->row != options->n || options->P0->col != options->n)
+    if (options->P0->row != n || options->P0->col != n)
     {
         LOG_ERROR("EKFInit() failed because the P0 matrix is not the correct size.");
         return EKF_ERROR;
     }
-    if (options->Q->row != options->n || options->Q->col != options->n)
+    if (options->Q->row != n || options->Q->col != n)
     {
         LOG_ERROR("EKFInit() failed because the Q matrix is not the correct size.");
         return EKF_ERROR;
@@ -80,14 +112,11 @@ EKFReturnCodes EKFInit(EKFState* ekf, EKFConfigOptions* options)
         LOG_ERROR("EKFInit() failed because the R matrix is not the correct size.");
         return EKF_ERROR;
     }
-    if (options->A->row != options->n || options->A->col != options->n)
+    if (options->A->row != n || options->A->col != n)
     {
         LOG_ERROR("EKFInit() failed because the A matrix is not the correct size.");
         return EKF_ERROR;
     }
-    // Check to see if f and h are not null.
-    NULL_CHECK_EKF(options->f);
-    NULL_CHECK_EKF(options->h);
 
     // Initialize the state vector.
     MATRIX_MATH_RETURN_CHECK(copyMatrix(options->x0, ekf->x));
@@ -154,7 +183,7 @@ EKFReturnCodes EKFInit(EKFState* ekf, EKFConfigOptions* options)
     // Initialize the state transition matrix function.
     ekf->updateAMatrix = options->updateAMatrix;
     // Initialize the number of state variables.
-    ekf->numberOfStates = options->n;
+    ekf->numberOfStates = n;
     // Initialize the number of measurement variables.
     ekf->numberOfMeasurements = numMeasurements;
     // Initialize the use finite difference Jacobian flag.
@@ -206,7 +235,10 @@ EKFReturnCodes EKFPredict(EKFState* ekf, double time, void* userData)
     NULL_CHECK_EKF(ekf);
     // Use the system dynamics model to predict the state at the next time step.
     // Get the new A vector.
-    ekf->updateAMatrix(ekf->A, ekf->x, ekf, time, userData);
+    if (ekf->updateAMatrix != NULL)
+    {
+        ekf->updateAMatrix(ekf->A, ekf->x, ekf, time, userData);
+    }
     // Propagate the state: x_predicted = f(x).
     ekf->f(ekf->x, ekf->_x_predicted, ekf, userData);
     MATRIX_MATH_RETURN_CHECK(copyMatrix(ekf->_x_predicted, ekf->x));
@@ -231,26 +263,37 @@ EKFReturnCodes EKFPredict(EKFState* ekf, double time, void* userData)
 // See EKF.h for documentation
 EKFReturnCodes EKFUpdate(EKFState* ekf, EKFMeasurement* measurement)
 {
+    return EKFUpdateWithUserData(ekf, measurement, NULL);
+} // EKFUpdate()
+
+// See EKF.h for documentation
+EKFReturnCodes EKFUpdateWithUserData(EKFState* ekf, EKFMeasurement* measurement, void* userData)
+{
     matrixReturnCodes invRet;
 
     LOG_FUNCTION();
 
     NULL_CHECK_EKF(ekf);
     NULL_CHECK_EKF(measurement);
+    if (measurement->z == NULL)
+    {
+        LOG_ERROR("EKFUpdateWithUserData() failed because measurement z is NULL.");
+        return EKF_NULL_POINTER;
+    }
     if (measurement->z->row != ekf->numberOfMeasurements || measurement->z->col != 1)
     {
-        LOG_ERROR("EKFUpdate() failed because measurement z is not the correct size.");
+        LOG_ERROR("EKFUpdateWithUserData() failed because measurement z is not the correct size.");
         return EKF_ERROR;
     }
     // Calculate the Jacobian matrix, H, of the measurement function with respect to the state variables, evaluated at
     // _x_predicted.
     if (ekf->useFiniteDifferenceJacobian)
     {
-        calculateJacobian(ekf->_x_predicted, ekf->_z, ekf->_H, ekf->h, ekf, ekf->_TEMP7, NULL);
+        calculateJacobian(ekf->_x_predicted, ekf->_z, ekf->_H, ekf->h, ekf, ekf->_TEMP7, userData);
     }
     else if (ekf->jacobianH)
     {
-        ekf->jacobianH(ekf->_x_predicted, ekf->_H, ekf, NULL);
+        ekf->jacobianH(ekf->_x_predicted, ekf->_H, ekf, userData);
     }
     // Calculate the Kalman gain: K = P_predicted * H^T * (H * P_predicted * H^T + R)^-1.
     MATRIX_MATH_RETURN_CHECK(transposeMatrix(ekf->_H, ekf->_H_TRANSPOSE));
@@ -266,7 +309,7 @@ EKFReturnCodes EKFUpdate(EKFState* ekf, EKFMeasurement* measurement)
     invRet = inverseMatrixWithJitter(ekf->_S, ekf->_TEMP6, (matrixType) 1e-6, 3, (matrixType) 100);
     if (invRet != MATRIX_SUCCESS)
     {
-        LOG_ERROR("EKFUpdate() failed to invert innovation matrix S.");
+        LOG_ERROR("EKFUpdateWithUserData() failed to invert innovation matrix S.");
         return EKF_ERROR;
     }
 
@@ -275,7 +318,7 @@ EKFReturnCodes EKFUpdate(EKFState* ekf, EKFMeasurement* measurement)
     MATRIX_MATH_RETURN_CHECK(multMatrix(ekf->_TEMP5, ekf->_TEMP6, ekf->_K)); // (n x m)*(m x m) = (n x m)
 
     // Calculate the measurement residual: y = z - h(x_predicted).
-    ekf->h(ekf->_x_predicted, ekf->_z, ekf, NULL);
+    ekf->h(ekf->_x_predicted, ekf->_z, ekf, userData);
     MATRIX_MATH_RETURN_CHECK(subMatrix(measurement->z, ekf->_z, ekf->_TEMP7));
     MATRIX_MATH_RETURN_CHECK(copyMatrix(ekf->_TEMP7, ekf->_z));
 
@@ -299,15 +342,29 @@ EKFReturnCodes EKFUpdate(EKFState* ekf, EKFMeasurement* measurement)
     MATRIX_MATH_RETURN_CHECK(addMatrix(ekf->P, ekf->_TEMP1, ekf->_TEMP2));
     MATRIX_MATH_RETURN_CHECK(copyMatrix(ekf->_TEMP2, ekf->P));
     return EKF_SUCCESS;
-} // EKFUpdate()
+} // EKFUpdateWithUserData()
 
 // ------------------------- Private Functions ------------------------- //
+static matrixType finiteDifferenceStep(matrixType value)
+{
+    const double baseEpsilon = sqrt((double) DBL_EPSILON);
+    double scaledStep;
+
+    scaledStep = baseEpsilon * fmax(1.0, fabs((double) value));
+    if (scaledStep <= 0.0)
+    {
+        scaledStep = (double) EPSILON;
+    }
+    return (matrixType) scaledStep;
+}
+
 void calculateJacobian(EKFMatrix* x, EKFMatrix* _x_predicted, EKFMatrix* Jacobian, EKFStateTransitionFunction f,
                        EKFState* ekf, EKFMatrix* baseline, void* userData)
 {
     int i, j;
     matrixType temp;
-    matrixType epislon = EPSILON;
+    matrixType stateValue;
+    matrixType epsilon;
     int numOfStates = x->row;
     int numOutputs = Jacobian->row;
 
@@ -316,8 +373,10 @@ void calculateJacobian(EKFMatrix* x, EKFMatrix* _x_predicted, EKFMatrix* Jacobia
     f(x, baseline, ekf, userData);
     for (i = 0; i < numOfStates; ++i)
     {
-        // Perturb the state variable by EPSILON.
-        SET_MATRIX(*x, i, 0, ACCESS_MATRIX(*x, i, 0) + epislon);
+        stateValue = ACCESS_MATRIX(*x, i, 0);
+        epsilon = finiteDifferenceStep(stateValue);
+        // Perturb the state variable by a scale-aware epsilon.
+        SET_MATRIX(*x, i, 0, stateValue + epsilon);
         // Calculate the state transition function with the perturbed state variable.
         // This takes in the state vector, ekf object, user data and outputs the predicted state vector.
         // Most of the time this will be a simple multiplication operation of the state transition matrix and the state
@@ -326,10 +385,10 @@ void calculateJacobian(EKFMatrix* x, EKFMatrix* _x_predicted, EKFMatrix* Jacobia
         // Calculate the Jacobian matrix, F, of the state transition function with respect to the state variables.
         for (j = 0; j < numOutputs; ++j)
         {
-            temp = (ACCESS_MATRIX(*_x_predicted, j, 0) - ACCESS_MATRIX(*baseline, j, 0)) / epislon;
+            temp = (ACCESS_MATRIX(*_x_predicted, j, 0) - ACCESS_MATRIX(*baseline, j, 0)) / epsilon;
             SET_MATRIX(*Jacobian, j, i, temp);
         } // for (j = 0; j < numOutputs; ++j)
         // Reset the state variable.
-        SET_MATRIX(*x, i, 0, ACCESS_MATRIX(*x, i, 0) - epislon);
+        SET_MATRIX(*x, i, 0, stateValue);
     } // for (i = 0; i < numOfStates; ++i
 } // calculateJacobian()

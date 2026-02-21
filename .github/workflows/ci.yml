@@ -57,6 +57,22 @@ jobs:
           python scripts/compare_filterpy_boat.py --csv build-debug/ekf_boat_compare.csv
           python scripts/compare_kalman.py --csv build-debug/kalman_filterpy_compare.csv
 
+      - name: Validate matrix inversion methods (Python)
+        run: |
+          python scripts/validate_matrix_inversions.py --samples 500 --max-size 12 --tol 1e-5
+
+      - name: Generate matrix inversion analysis report
+        run: |
+          python scripts/generate_inversion_report.py --samples 250 --max-size 12 --out build-debug/matrix-inversion-validation-performance.md
+
+      - name: Upload matrix inversion analysis artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matrix-inversion-analysis-${{ matrix.os }}
+          path: build-debug/matrix-inversion-validation-performance.md
+          if-no-files-found: error
+
       - name: Configure (Release)
         run: cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
 

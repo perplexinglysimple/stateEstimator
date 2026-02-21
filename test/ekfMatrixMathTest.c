@@ -28,6 +28,10 @@ matrixReturnCodes inverseTest3x3(bool increasedLogging);
 matrixReturnCodes inverseTest4x4(bool increasedLogging);
 matrixReturnCodes inverseTest5x5(bool increasedLogging);
 matrixReturnCodes inverseTest6x6(bool increasedLogging);
+matrixReturnCodes inverseGaussJordanMethodTest(bool increasedLogging);
+matrixReturnCodes inverseLUMethodTest(bool increasedLogging);
+matrixReturnCodes inverseCholeskyMethodTest(bool increasedLogging);
+matrixReturnCodes inverseAutoMethodFallbackTest(bool increasedLogging);
 matrixReturnCodes additionTest(bool increasedLogging);
 matrixReturnCodes subtractionTest(bool increasedLogging);
 matrixReturnCodes multiplicationTest(bool increasedLogging);
@@ -63,6 +67,7 @@ matrixReturnCodes jaggedStaticParityTest(bool increasedLogging);
 matrixReturnCodes nonsquareMultiplyTest(bool increasedLogging);
 matrixReturnCodes nanIdentityMinusATest(bool increasedLogging);
 matrixReturnCodes aliasingGuardTests(bool increasedLogging);
+static matrixReturnCodes compareMatrixApprox(struct matrix* a, struct matrix* b, matrixType eps);
 
 typedef struct TestCase_
 {
@@ -92,6 +97,10 @@ int main(int argc, char** argv)
         {"inverse4x4", inverseTest4x4},
         {"inverse5x5", inverseTest5x5},
         {"inverse6x6", inverseTest6x6},
+        {"inverse_gauss_jordan", inverseGaussJordanMethodTest},
+        {"inverse_lu", inverseLUMethodTest},
+        {"inverse_cholesky", inverseCholeskyMethodTest},
+        {"inverse_auto_fallback", inverseAutoMethodFallbackTest},
         {"add", additionTest},
         {"sub", subtractionTest},
         {"mult", multiplicationTest},
@@ -441,7 +450,7 @@ matrixReturnCodes inverseTest(bool increasedLogging)
     correctResult->mat[1][1] = -0.5;
 
     MATRIX_MATH_RETURN_CHECK(inverseMatrix(invTest, invTest2));
-    MATRIX_MATH_RETURN_CHECK(compareMatrieces(invTest2, correctResult));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(invTest2, correctResult, 1e-9));
 
     if (increasedLogging)
     {
@@ -494,7 +503,7 @@ matrixReturnCodes inverseTest3x3(bool increasedLogging)
     correctResult->mat[2][2] = 1;
 
     MATRIX_MATH_RETURN_CHECK(inverseMatrix(invTest, result));
-    MATRIX_MATH_RETURN_CHECK(compareMatrieces(result, correctResult));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(result, correctResult, 1e-9));
 
     if (increasedLogging)
     {
@@ -561,7 +570,7 @@ matrixReturnCodes inverseTest4x4(bool increasedLogging)
     correctResult->mat[3][3] = 1;
 
     MATRIX_MATH_RETURN_CHECK(inverseMatrix(invTest, result));
-    MATRIX_MATH_RETURN_CHECK(compareMatrieces(result, correctResult));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(result, correctResult, 1e-9));
 
     if (increasedLogging)
     {
@@ -646,7 +655,7 @@ matrixReturnCodes inverseTest5x5(bool increasedLogging)
     correctResult->mat[4][4] = 1;
 
     MATRIX_MATH_RETURN_CHECK(inverseMatrix(invTest, result));
-    MATRIX_MATH_RETURN_CHECK(compareMatrieces(result, correctResult));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(result, correctResult, 1e-9));
 
     if (increasedLogging)
     {
@@ -753,7 +762,7 @@ matrixReturnCodes inverseTest6x6(bool increasedLogging)
     correctResult->mat[5][5] = 1;
 
     MATRIX_MATH_RETURN_CHECK(inverseMatrix(invTest, result));
-    MATRIX_MATH_RETURN_CHECK(compareMatrieces(result, correctResult));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(result, correctResult, 1e-9));
 
     if (increasedLogging)
     {
@@ -847,6 +856,164 @@ static matrixReturnCodes compareMatrixApprox(struct matrix* a, struct matrix* b,
             }
         }
     }
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes inverseGaussJordanMethodTest(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Inverse Gauss-Jordan Method Test");
+
+    struct matrix* a = NULL;
+    struct matrix* inv = NULL;
+    struct matrix* res = NULL;
+    struct matrix* identity = NULL;
+
+    INIT_MATRIX(a, 3, 3);
+    INIT_MATRIX(inv, 3, 3);
+    INIT_MATRIX(res, 3, 3);
+    INIT_MATRIX(identity, 3, 3);
+
+    a->mat[0][0] = 4;
+    a->mat[0][1] = 7;
+    a->mat[0][2] = 2;
+    a->mat[1][0] = 3;
+    a->mat[1][1] = 6;
+    a->mat[1][2] = 1;
+    a->mat[2][0] = 2;
+    a->mat[2][1] = 5;
+    a->mat[2][2] = 3;
+
+    MATRIX_MATH_RETURN_CHECK(inverseMatrixByMethod(a, inv, MATRIX_INVERSE_GAUSS_JORDAN));
+    MATRIX_MATH_RETURN_CHECK(multMatrix(a, inv, res));
+    MATRIX_MATH_RETURN_CHECK(setIdentityMatrix(identity));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(res, identity, 1e-6));
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(inv);
+    FREE_MATRIX(res);
+    FREE_MATRIX(identity);
+
+    LOG_INFO("Completed Inverse Gauss-Jordan Method Test");
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes inverseLUMethodTest(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Inverse LU Method Test");
+
+    struct matrix* a = NULL;
+    struct matrix* inv = NULL;
+    struct matrix* res = NULL;
+    struct matrix* identity = NULL;
+
+    INIT_MATRIX(a, 3, 3);
+    INIT_MATRIX(inv, 3, 3);
+    INIT_MATRIX(res, 3, 3);
+    INIT_MATRIX(identity, 3, 3);
+
+    a->mat[0][0] = 2;
+    a->mat[0][1] = -1;
+    a->mat[0][2] = 0;
+    a->mat[1][0] = 1;
+    a->mat[1][1] = 2;
+    a->mat[1][2] = 1;
+    a->mat[2][0] = 3;
+    a->mat[2][1] = 1;
+    a->mat[2][2] = 4;
+
+    MATRIX_MATH_RETURN_CHECK(inverseMatrixByMethod(a, inv, MATRIX_INVERSE_LU));
+    MATRIX_MATH_RETURN_CHECK(multMatrix(a, inv, res));
+    MATRIX_MATH_RETURN_CHECK(setIdentityMatrix(identity));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(res, identity, 1e-6));
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(inv);
+    FREE_MATRIX(res);
+    FREE_MATRIX(identity);
+
+    LOG_INFO("Completed Inverse LU Method Test");
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes inverseCholeskyMethodTest(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Inverse Cholesky Method Test");
+
+    struct matrix* a = NULL;
+    struct matrix* inv = NULL;
+    struct matrix* res = NULL;
+    struct matrix* identity = NULL;
+
+    INIT_MATRIX(a, 3, 3);
+    INIT_MATRIX(inv, 3, 3);
+    INIT_MATRIX(res, 3, 3);
+    INIT_MATRIX(identity, 3, 3);
+
+    a->mat[0][0] = 4;
+    a->mat[0][1] = 1;
+    a->mat[0][2] = 2;
+    a->mat[1][0] = 1;
+    a->mat[1][1] = 3;
+    a->mat[1][2] = 0;
+    a->mat[2][0] = 2;
+    a->mat[2][1] = 0;
+    a->mat[2][2] = 5;
+
+    MATRIX_MATH_RETURN_CHECK(inverseMatrixByMethod(a, inv, MATRIX_INVERSE_CHOLESKY));
+    MATRIX_MATH_RETURN_CHECK(multMatrix(a, inv, res));
+    MATRIX_MATH_RETURN_CHECK(setIdentityMatrix(identity));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(res, identity, 1e-6));
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(inv);
+    FREE_MATRIX(res);
+    FREE_MATRIX(identity);
+
+    LOG_INFO("Completed Inverse Cholesky Method Test");
+    return MATRIX_SUCCESS;
+}
+
+matrixReturnCodes inverseAutoMethodFallbackTest(bool increasedLogging)
+{
+    (void) increasedLogging;
+    LOG_INFO("Starting Inverse Auto Method Fallback Test");
+
+    struct matrix* a = NULL;
+    struct matrix* inv = NULL;
+    struct matrix* res = NULL;
+    struct matrix* identity = NULL;
+
+    INIT_MATRIX(a, 3, 3);
+    INIT_MATRIX(inv, 3, 3);
+    INIT_MATRIX(res, 3, 3);
+    INIT_MATRIX(identity, 3, 3);
+
+    a->mat[0][0] = 1;
+    a->mat[0][1] = 2;
+    a->mat[0][2] = 3;
+    a->mat[1][0] = 0;
+    a->mat[1][1] = 1;
+    a->mat[1][2] = 4;
+    a->mat[2][0] = 5;
+    a->mat[2][1] = 6;
+    a->mat[2][2] = 0;
+
+    MATRIX_MATH_RETURN_CHECK(
+        expectReturnCode(inverseMatrixByMethod(a, inv, MATRIX_INVERSE_CHOLESKY), MATRIX_ERROR, "cholesky fallback precheck"));
+    MATRIX_MATH_RETURN_CHECK(inverseMatrixByMethod(a, inv, MATRIX_INVERSE_AUTO));
+    MATRIX_MATH_RETURN_CHECK(multMatrix(a, inv, res));
+    MATRIX_MATH_RETURN_CHECK(setIdentityMatrix(identity));
+    MATRIX_MATH_RETURN_CHECK(compareMatrixApprox(res, identity, 1e-6));
+
+    FREE_MATRIX(a);
+    FREE_MATRIX(inv);
+    FREE_MATRIX(res);
+    FREE_MATRIX(identity);
+
+    LOG_INFO("Completed Inverse Auto Method Fallback Test");
     return MATRIX_SUCCESS;
 }
 
@@ -1633,9 +1800,9 @@ matrixReturnCodes inverseSingularTest(bool increasedLogging)
     a->mat[1][1] = 4;
 
     matrixReturnCodes rc = inverseMatrix(a, res);
-    if (rc != MATRIX_NAN_FAILURE && rc != MATRIX_INF_FAILURE)
+    if (rc != MATRIX_NAN_FAILURE && rc != MATRIX_INF_FAILURE && rc != MATRIX_ERROR)
     {
-        LOG_ERROR("inverseMatrix did not flag singular matrix with NAN/INF return code.");
+        LOG_ERROR("inverseMatrix did not flag singular matrix failure.");
         FREE_MATRIX(a);
         FREE_MATRIX(res);
         return MATRIX_ERROR;

@@ -66,6 +66,13 @@ EKFReturnCodes EKFPredict(EKFState* ekf, double time, void* userData);
 EKFReturnCodes EKFUpdate(EKFState* ekf, EKFMeasurement* measurement);
 
 /**
+ * @brief Update step with measurement and optional model user data.
+ * @note Uses Joseph form covariance update for numerical stability.
+ * @note Innovation matrix S inversion uses diagonal jitter if near-singular.
+ */
+EKFReturnCodes EKFUpdateWithUserData(EKFState* ekf, EKFMeasurement* measurement, void* userData);
+
+/**
  * @brief Cleanup EKF state allocations (if mallocFlag is true).
  */
 EKFReturnCodes EKFCleanup(EKFState* ekf);
