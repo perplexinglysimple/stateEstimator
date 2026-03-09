@@ -47,6 +47,7 @@ add_executable(ekfAdvancedUpdateTest test/ekfAdvancedUpdateTest.c)
 add_executable(ekfFiniteDiffJacobianTest test/ekfFiniteDiffJacobianTest.c)
 add_executable(ekfFilterpyExportTest test/ekfFilterpyExportTest.c)
 add_executable(ekfFilterpyExportNonlinearTest test/ekfFilterpyExportNonlinearTest.c)
+add_executable(ekfBenchDataExportTest test/ekfBenchDataExportTest.c)
 add_executable(ekfMeasurementDimensionTest test/ekfMeasurementDimensionTest.c)
 add_executable(ekfBoatModelTest test/ekfBoatModelTest.c)
 add_executable(ekfBoatExportTest test/ekfBoatExportTest.c)
@@ -68,6 +69,7 @@ add_test(NAME ekfAdvancedUpdateTest COMMAND $<TARGET_FILE:ekfAdvancedUpdateTest>
 add_test(NAME ekfFiniteDiffJacobianTest COMMAND $<TARGET_FILE:ekfFiniteDiffJacobianTest>)
 add_test(NAME ekfFilterpyExportTest COMMAND $<TARGET_FILE:ekfFilterpyExportTest>)
 add_test(NAME ekfFilterpyExportNonlinearTest COMMAND $<TARGET_FILE:ekfFilterpyExportNonlinearTest>)
+add_test(NAME ekfBenchDataExportTest COMMAND $<TARGET_FILE:ekfBenchDataExportTest> ${CMAKE_BINARY_DIR}/ekf_bench_compare.csv)
 add_test(NAME ekfMeasurementDimensionTest COMMAND $<TARGET_FILE:ekfMeasurementDimensionTest>)
 add_test(NAME ekfBoatModelTest COMMAND $<TARGET_FILE:ekfBoatModelTest>)
 add_test(NAME ekfBoatExportTest COMMAND $<TARGET_FILE:ekfBoatExportTest> ${CMAKE_BINARY_DIR}/ekf_boat_compare.csv)
@@ -76,6 +78,7 @@ add_test(NAME kalmanFilterExportTest COMMAND $<TARGET_FILE:kalmanFilterExportTes
 set_tests_properties(ekfBoatModelTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 set_tests_properties(ekfBoatExportTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 set_tests_properties(kalmanFilterExportTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+set_tests_properties(ekfBenchDataExportTest PROPERTIES WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_test(NAME ekfMatrixMath_copy COMMAND $<TARGET_FILE:ekfMatrixMathTest> copy)
 add_test(NAME ekfMatrixMath_inverse2x2 COMMAND $<TARGET_FILE:ekfMatrixMathTest> inverse2x2)
 add_test(NAME ekfMatrixMath_inverse3x3 COMMAND $<TARGET_FILE:ekfMatrixMathTest> inverse3x3)
@@ -127,6 +130,7 @@ target_link_libraries(ekfAdvancedUpdateTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfFiniteDiffJacobianTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfFilterpyExportTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfFilterpyExportNonlinearTest stateEstimatorLib ${MATH_LIB})
+target_link_libraries(ekfBenchDataExportTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfMeasurementDimensionTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfBoatModelTest stateEstimatorLib ${MATH_LIB})
 target_link_libraries(ekfBoatExportTest stateEstimatorLib ${MATH_LIB})
@@ -143,6 +147,7 @@ set(TEST_TARGETS
     ekfFiniteDiffJacobianTest
     ekfFilterpyExportTest
     ekfFilterpyExportNonlinearTest
+    ekfBenchDataExportTest
     ekfMeasurementDimensionTest
     ekfBoatModelTest
     ekfBoatExportTest
@@ -160,7 +165,7 @@ if(FORCE_MATRIX_MATH_DEBUG_CHECKS_FOR_TESTS)
     endforeach()
 endif()
 
-install(TARGETS ekfMallocTest ekfStaticInitTest ekfPersonWalkTest ekfMatrixMathTest ekfJacobianUpdateTest ekfAdvancedUpdateTest ekfFiniteDiffJacobianTest ekfFilterpyExportTest ekfFilterpyExportNonlinearTest ekfMeasurementDimensionTest ekfBoatModelTest ekfBoatExportTest kalmanFilterTest kalmanFilterExportTest
+install(TARGETS ekfMallocTest ekfStaticInitTest ekfPersonWalkTest ekfMatrixMathTest ekfJacobianUpdateTest ekfAdvancedUpdateTest ekfFiniteDiffJacobianTest ekfFilterpyExportTest ekfFilterpyExportNonlinearTest ekfBenchDataExportTest ekfMeasurementDimensionTest ekfBoatModelTest ekfBoatExportTest kalmanFilterTest kalmanFilterExportTest
         DESTINATION bin)
 
 if(ENABLE_COVERAGE AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
