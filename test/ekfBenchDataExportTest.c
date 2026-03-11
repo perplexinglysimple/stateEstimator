@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#define CSV_SSCANF sscanf_s
+#else
+#define CSV_SSCANF sscanf
+#endif
+
 #define BENCH_STATE_DIM 6
 #define BENCH_MEAS_DIM 3
 #define CALIBRATION_SAMPLES 32
@@ -303,7 +309,7 @@ static int readNextImu(FILE* file, ImuRow* row)
         double ax = 0.0;
         double ay = 0.0;
         double az = 0.0;
-        if (sscanf(line, "%ld,%lf,%lf,%lf", &tick_ms, &ax, &ay, &az) == 4)
+        if (CSV_SSCANF(line, "%ld,%lf,%lf,%lf", &tick_ms, &ax, &ay, &az) == 4)
         {
             row->tick_ms = tick_ms;
             row->accel_x_mps2 = ax;
@@ -323,7 +329,7 @@ static int readNextBmp(FILE* file, BmpRow* row)
         long tick_ms = 0;
         double temperature_c = 0.0;
         double pressure_pa = 0.0;
-        if (sscanf(line, "%ld,%lf,%lf", &tick_ms, &temperature_c, &pressure_pa) == 3)
+        if (CSV_SSCANF(line, "%ld,%lf,%lf", &tick_ms, &temperature_c, &pressure_pa) == 3)
         {
             row->tick_ms = tick_ms;
             row->pressure_pa = pressure_pa;
@@ -348,8 +354,8 @@ static int readNextGps(FILE* file, GpsRow* row)
         double speed_mps = 0.0;
         double course_deg = 0.0;
         double hdop = 0.0;
-        if (sscanf(line, "%ld,%d,%d,%d,%lf,%lf,%lf,%lf,%lf,%lf", &tick_ms, &valid_fix, &fix_type, &satellites,
-                   &latitude_deg, &longitude_deg, &altitude_m, &speed_mps, &course_deg, &hdop) == 10)
+        if (CSV_SSCANF(line, "%ld,%d,%d,%d,%lf,%lf,%lf,%lf,%lf,%lf", &tick_ms, &valid_fix, &fix_type, &satellites,
+                       &latitude_deg, &longitude_deg, &altitude_m, &speed_mps, &course_deg, &hdop) == 10)
         {
             (void) fix_type;
             (void) satellites;
